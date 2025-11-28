@@ -3,24 +3,14 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width,initial-scale=1" />
-    <title>Cancelamento SESC — Wizard</title>
-
-    <!-- Tabler Icons (leve e bonito) -->
-    <script
-      src="https://unpkg.com/@tabler/icons@2.28.0/browser.min.js"
-      defer
-    ></script>
-
-    <!-- ExcelJS -->
-    <script src="https://cdn.jsdelivr.net/npm/exceljs/dist/exceljs.min.js"></script>
-
+    <title>Cancelamento SESC</title>
     <link rel="stylesheet" href="styles.css" />
   </head>
   <body>
     <div class="app">
       <header class="app-header">
         <div class="brand">
-          <div class="logo">SESC</div>
+            <img class="logo-container" href="/assets/logo-sesc.png"></img>
           <div class="title">Cancelamento de Transações</div>
         </div>
         <div class="steps">
@@ -29,7 +19,6 @@
       </header>
 
       <main class="card-container">
-        <!-- STEP 1 — Dados da Solicitação -->
         <section class="card step active" id="step-1">
           <h2>Dados da solicitação</h2>
 
@@ -60,12 +49,17 @@
 
             <label class="field">
               <span>Caixa</span>
-              <input id="caixa" type="number" min="0" />
+              <input id="caixa" type="number" min="0" placeholder="Ex: 100" />
             </label>
 
             <label class="field">
-              <span>Número da venda</span>
-              <input id="numeroVenda" type="number" min="0" />
+              <span>Número da venda (título)</span>
+              <input
+                id="numeroVenda"
+                type="number"
+                min="0"
+                placeholder="Ex: 12345"
+              />
             </label>
 
             <label class="field">
@@ -77,14 +71,19 @@
 
             <label class="field">
               <span>Código do estabelecimento</span>
-              <input id="codigoEstabelecimento" type="text" disabled />
+              <input
+                id="codigoEstabelecimento"
+                type="text"
+                disabled
+                placeholder="Preenchido automaticamente"
+              />
             </label>
 
             <label class="field">
               <span>Canal de venda</span>
               <select id="canalVenda">
                 <option value="">Selecione...</option>
-                <option value="sitef">SiTef</option>
+                <option value="sitef">TEF</option>
                 <option value="ecommerce">E-commerce</option>
                 <option value="pos">POS</option>
               </select>
@@ -101,13 +100,9 @@
           </div>
         </section>
 
-        <!-- STEP 2 — Dados SESCNET -->
         <section class="card step" id="step-2">
           <h2>Dados SESCNET</h2>
-          <p class="muted">
-            Cole os dados copiados do SESCNET (linhas com TABs). Os campos serão
-            quebrados em colunas.
-          </p>
+          <p class="muted">Cole os dados copiados do SESCNET.</p>
           <textarea
             id="sescnetInput"
             placeholder="Cole os dados aqui... (CTRL+V)"
@@ -123,10 +118,9 @@
           </div>
         </section>
 
-        <!-- STEP 3 — Se canal SiTef (escolha web/express) -->
         <section class="card step" id="step-3">
           <h2>SiTef — versão</h2>
-          <p class="muted">Escolha a versão usada (apenas se Canal = SiTef).</p>
+          <p class="muted">Escolha a versão usada.</p>
 
           <div class="sitef-choices">
             <button class="btn tile" id="sitefWeb">
@@ -146,13 +140,9 @@
           </div>
         </section>
 
-        <!-- STEP 4 — SiTef Web input -->
         <section class="card step" id="step-4">
           <h2>SiTef Web (antigo)</h2>
-          <p class="muted">
-            Cole a linha com campos separados por TAB (ex: 00000040 20250502
-            ...)
-          </p>
+          <p class="muted">Cole as informações do SiTef</p>
           <textarea
             id="sitefWebInput"
             placeholder="Cole a linha do SiTef Web aqui"
@@ -168,16 +158,12 @@
           </div>
         </section>
 
-        <!-- STEP 5 — SiTef Express input -->
         <section class="card step" id="step-5">
           <h2>SiTef Express (novo)</h2>
-          <p class="muted">
-            Cole linhas no formato <code>Dado: &lt;TAB&gt; Valor</code> (cada
-            linha).
-          </p>
+          <p class="muted">Cole a linha do Consulta títulos</p>
           <textarea
             id="sitefExpressInput"
-            placeholder="Ex: Data:	2025-05-02"
+            placeholder="Ex: Data: 	2025-05-02"
           ></textarea>
 
           <div class="actions">
@@ -190,39 +176,33 @@
           </div>
         </section>
 
-        <!-- STEP 6 — PASSO A (valor + resumo + gerar) -->
         <section class="card step" id="step-6">
-          <h2>Passo A — Valor e Resumo</h2>
+          <h2>Valor a cancelar + resumo da solicitação</h2>
 
           <label class="field">
             <span>Valor a cancelar</span>
-            <input id="valorCancelar" type="text" placeholder="R$ 0,00" />
+            <input id="valorCancelar" placeholder="R$ 0,00" />
           </label>
 
-          <div class="summary card-summary" id="summaryBox">
-            <!-- preenchido dinamicamente -->
-          </div>
+          <div class="summary card-summary" id="summaryBox"></div>
 
           <div class="actions">
             <button class="btn ghost" onclick="voltar(5)">
               <span class="icon" data-icon="chevron-left"></span> Voltar
             </button>
             <button class="btn success" id="btnGenerate">
-              <span class="icon" data-icon="file-download"></span> Gerar e
-              Baixar XLSX
+              <span class="icon" data-icon="file-download"></span>Baixar arquivo
             </button>
           </div>
         </section>
       </main>
 
-      <footer class="app-footer">
-        <small
-          >Coloque o seu <code>assets/template.xlsx</code> na pasta
-          <strong>/assets/</strong>.</small
-        >
-      </footer>
+      <footer class="app-footer"></footer>
     </div>
+    <script src="https://unpkg.com/@tabler/icons@2.28.0/browser.min.js"></script>
 
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.3.0/exceljs.min.js"></script>
+    <script src="https://unpkg.com/@tabler/icons/dist/browser.min.js"></script>
     <script src="script.js"></script>
   </body>
 </html>
