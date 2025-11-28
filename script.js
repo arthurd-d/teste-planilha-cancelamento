@@ -81,20 +81,20 @@ const estabelecimentos = {
   VIAMÃO: "1045331691",
 };
 
-/* ---------- State and DOM Helpers ---------- */
+/* ---------- State ---------- */
 let state = {
   step: 1,
   dadosSescnetTable: [],
   dadosSitefWeb: [],
-  dadosSitefExpress: {}, // map
-  sitefType: null, // 'web' or 'express'
+  dadosSitefExpress: {},
+  sitefType: null,
 };
 
 const $ = (id) => document.getElementById(id);
-const stepsTotal = 6;
 
+/* ---------- Steps ---------- */
 function updateStepIndicator() {
-  $("stepIndicator").textContent = `Passo ${state.step} de ${stepsTotal}`;
+  $("stepIndicator").textContent = `Passo ${state.step} de 6`;
 }
 
 function mostrarStep(n) {
@@ -105,16 +105,12 @@ function mostrarStep(n) {
   const el = document.querySelector(`#step-${n}`);
   if (el) el.classList.add("active");
   updateStepIndicator();
-  // small animation
-  el && (el.style.transform = "translateY(6px)");
-  setTimeout(() => el && (el.style.transform = "translateY(0)"), 120);
 }
 
-function voltar(n) {
-  mostrarStep(n);
-}
+mostrarStep(1);
+updateStepIndicator();
 
-/* ---------- Preencher select de estabelecimentos ---------- */
+/* ---------- Populate Establishments ---------- */
 function populaEstabelecimentos() {
   const sel = $("nomeEstabelecimento");
   Object.keys(estabelecimentos).forEach((nome) => {
@@ -125,12 +121,8 @@ function populaEstabelecimentos() {
   });
 }
 populaEstabelecimentos();
-$("nomeEstabelecimento").addEventListener("change", () => {
-  const val = $("nomeEstabelecimento").value;
-  $("codigoEstabelecimento").value = estabelecimentos[val] || "";
-});
 
-/* ---------- Input masks and Navigation Buttons ---------- */
+/* ---------- Masks ---------- */
 function maskCPF(input) {
   let v = input.value.replace(/\D/g, "").slice(0, 11);
   v = v.replace(/^(\d{3})(\d)/, "$1.$2");
@@ -140,101 +132,45 @@ function maskCPF(input) {
 }
 $("cpfCliente").addEventListener("input", () => maskCPF($("cpfCliente")));
 
-// MÁSCARA DE MOEDA (FORMATTER)
-// MÁSCARA DE MOEDA (FORMATTER)
-// MÁSCARA DE MOEDA (FORMATTER)
 function formatCurrencyInput(el) {
-  let v = el.value.replace(/\D/g, ""); // Remove tudo que não for dígito
-  if (!v) {
-    el.value = "";
-    return;
-  }
-
-  // Se houver menos de 3 dígitos, preenche com zero na frente para ter a formatação mínima (ex: '1' vira '001')
-  while (v.length < 3) {
-    v = "0" + v;
-  }
-
-  // Parte dos centavos (últimos 2 dígitos)
+  let v = el.value.replace(/\D/g, "");
+  if (!v) return (el.value = "");
+  while (v.length < 3) v = "0" + v;
   const cents = v.slice(-2);
-
-  // Parte inteira (dígitos restantes)
   let intPart = v.slice(0, -2);
-
-  // CORREÇÃO AQUI: Remove zeros à esquerda da parte inteira,
-  // exceto se o resultado for apenas '0'.
-  // Ex: '001' -> '1'
-  // Ex: '0100' -> '100'
   intPart = intPart.replace(/^0+/, "") || "0";
-
-  // Aplica a máscara de milhar (ponto)
   intPart = intPart.replace(/\B(?=(\d{3})+(?!\d))/g, ".");
-
-  // Formata e define o valor no input
   el.value = `R$ ${intPart},${cents}`;
 }
-$("valorCancelar").addEventListener("input", () =>
-  formatCurrencyInput($("valorCancelar"))
-);
 
-$("numeroVenda").addEventListener(
-  "input",
-  (e) => (e.target.value = e.target.value.replace(/\D/g, ""))
-);
-$("caixa").addEventListener(
-  "input",
-  (e) => (e.target.value = e.target.value.replace(/\D/g, ""))
-);
+$("valorCancelar").addEventListener("input", () => {
+  formatCurrencyInput($("valorCancelar"));
+  montarResumo();
+});
 
-document.getElementById("btnNext1").addEventListener("click", () => {
-  const nome = $("nomeCliente").value.trim();
-  const cpf = $("cpfCliente").value.trim();
-  const data = $("dataSolicitacao").value.trim();
-  const caixa = $("caixa").value.trim();
-  const venda = $("numeroVenda").value.trim();
-  const estab = $("nomeEstabelecimento").value;
-  const canal = $("canalVenda").value;
-
-  const faltando = [];
-  if (!nome) faltando.push("Nome do cliente");
-  if (!cpf) faltando.push("CPF do cliente");
-  if (!data) faltando.push("Data da solicitação");
-  if (!caixa) faltando.push("Caixa");
-  if (!venda) faltando.push("Número da venda");
-  if (!estab) faltando.push("Nome do estabelecimento");
-  if (!canal) faltando.push("Canal de venda");
-
-  if (faltando.length) {
-    alert("Preencha os seguintes campos:\n• " + faltando.join("\n• "));
-    return;
-  }
+/* ---------- Navegação Step 1 ---------- */
+$("btnNext1").addEventListener("click", () => {
+  if (!$("nomeCliente").value.trim()) return alert("Preencha nome do cliente.");
+  if (!$("cpfCliente").value.trim()) return alert("Preencha o CPF.");
+  if (!$("dataSolicitacao").value.trim()) return alert("Preencha a data.");
+  if (!$("caixa").value.trim()) return alert("Preencha o caixa.");
+  if (!$("numeroVenda").value.trim())
+    return alert("Preencha o número da venda.");
+  if (!$("nomeEstabelecimento").value.trim())
+    return alert("Selecione o estabelecimento.");
+  if (!$("canalVenda").value.trim()) return alert("Selecione o canal.");
 
   mostrarStep(2);
 });
 
-document.getElementById("btnPreview1").addEventListener("click", () => {
-  const txt = `Cliente: ${$("nomeCliente").value}\nCPF: ${
-    $("cpfCliente").value
-  }\nEstabelecimento: ${$("nomeEstabelecimento").value}`;
-  alert("Preview rápido:\n\n" + txt);
-});
-
-document.getElementById("btnNext2").addEventListener("click", () => {
+/* ---------- Step 2 ---------- */
+$("btnNext2").addEventListener("click", () => {
   const raw = $("sescnetInput").value.trim();
-  if (!raw) {
-    if (!confirm("Nenhum dado colado. Deseja continuar sem dados SESCNET?"))
-      return;
-  }
-  const lines = raw
-    .split(/\r?\n/)
-    .map((l) => l.trim())
-    .filter(Boolean);
-  const table = lines.map((ln) =>
-    ln.includes("\t")
-      ? ln.split("\t").map((c) => c.trim())
-      : ln.split(/\s+/).map((c) => c.trim())
-  );
-  state.dadosSescnetTable = table;
+  if (!raw && !confirm("Nenhum dado do SESCNET. Continuar?")) return;
+
+  const lines = raw.split(/\r?\n/).filter(Boolean);
+  state.dadosSescnetTable = lines.map((ln) => ln.split(/\t| +/g));
+
   const canal = $("canalVenda").value;
   if (canal === "sitef") mostrarStep(3);
   else {
@@ -243,6 +179,7 @@ document.getElementById("btnNext2").addEventListener("click", () => {
   }
 });
 
+/* ---------- Step 3 → Tipo SiTef ---------- */
 $("sitefWeb").addEventListener("click", () => {
   state.sitefType = "web";
   mostrarStep(4);
@@ -252,264 +189,115 @@ $("sitefExpress").addEventListener("click", () => {
   mostrarStep(5);
 });
 
-document.getElementById("btnNext4").addEventListener("click", () => {
+/* ---------- Step 4 → SiTef Web ---------- */
+$("btnNext4").addEventListener("click", () => {
   const txt = $("sitefWebInput").value.trim();
-  if (!txt) {
-    alert("Cole os dados do SiTef Web");
-    return;
-  }
-  const arr = txt.split("\t").map((x) => x.trim());
-  state.dadosSitefWeb = arr;
+  if (!txt) return alert("Cole dados do SiTef Web.");
+
+  state.dadosSitefWeb = txt.split("\t");
   montarResumo();
   mostrarStep(6);
 });
 
-document.getElementById("btnNext5").addEventListener("click", () => {
+/* ---------- Step 5 → SiTef Express ---------- */
+$("btnNext5").addEventListener("click", () => {
   const txt = $("sitefExpressInput").value.trim();
-  if (!txt) {
-    alert("Cole os dados do SiTef Express");
-    return;
-  }
-  const lines = txt
-    .split(/\r?\n/)
-    .map((l) => l.trim())
-    .filter(Boolean);
+  if (!txt) return alert("Cole dados do SiTef Express.");
+
   const map = {};
-  lines.forEach((line) => {
-    const parts = line.split("\t");
-    if (parts.length >= 2) {
-      const key = parts[0].replace(/:$/, "").trim();
-      const val = parts.slice(1).join("\t").trim();
-      map[key] = val;
-    }
+  txt.split(/\r?\n/).forEach((ln) => {
+    const [k, v] = ln.split("\t");
+    if (k && v) map[k.replace(/:$/, "")] = v.trim();
   });
+
   state.dadosSitefExpress = map;
   montarResumo();
   mostrarStep(6);
 });
 
-function montarResumo() {
-  const nome = $("nomeCliente").value;
-  const cpf = $("cpfCliente").value;
-  const data = $("dataSolicitacao").value;
-  const caixa = $("caixa").value;
-  const venda = $("numeroVenda").value;
-  const estab = $("nomeEstabelecimento").value;
-  const cod = estabelecimentos[estab] || "";
-  const canal = $("canalVenda").value;
-  let valorTransacao = "";
-  if (state.sitefType === "web" && state.dadosSitefWeb.length > 11)
-    valorTransacao = state.dadosSitefWeb[11];
-  if (state.sitefType === "express" && state.dadosSitefExpress["Valor"])
-    valorTransacao = state.dadosSitefExpress["Valor"];
-  const summary = `
-      <div><b>Data envio:</b> ${data}</div>
-      <div><b>Caixa:</b> ${caixa}</div>
-      <div><b>Nro do título:</b> ${venda}</div>
-      <div><b>Nome estabelecimento:</b> ${estab}</div>
-      <div><b>Cód. Estabelecimento:</b> ${cod}</div>
-      <hr/>
-      <div><b>Nome do Cliente:</b> ${nome}</div>
-      <div><b>CPF do Cliente:</b> ${cpf}</div>
-      <hr/>
-      <div><b>Canal de venda:</b> ${canal}</div>
-      <div><b>Valor transação do cartão:</b> ${
-        valorTransacao || "(não detectado)"
-      }</div>
-      <div><b>Valor a cancelar:</b> ${
-        $("valorCancelar").value || "(pendente)"
-      }</div>
-  `;
-  $("summaryBox").innerHTML = summary;
-}
-$("valorCancelar").addEventListener("input", montarResumo);
-
-/* -------------------------------------------
-  Excel manipulation (ExcelJS)
-  ------------------------------------------- */
-async function gerarExcelPreenchido() {
-  const valorRaw = $("valorCancelar").value.trim();
-  if (!valorRaw) {
-    alert("Informe o valor a cancelar.");
-    return;
-  }
-
-  // 1. Carrega o template
-  const workbook = new ExcelJS.Workbook();
-  try {
-    const resp = await fetch("template.xlsx");
-    if (!resp.ok)
-      throw new Error(
-        "Não encontrou assets/template.xlsx (coloque seu template na pasta /assets)."
-      );
-    const arrayBuffer = await resp.arrayBuffer();
-    await workbook.xlsx.load(arrayBuffer);
-  } catch (e) {
-    alert(
-      "Erro ao carregar template.xlsx ou a biblioteca ExcelJS.\n" + e.message
-    );
-    return;
-  }
-
-  // 2. Acessa as planilhas
-  const sheetCapa = workbook.getWorksheet("CAPA");
-  const sheetDados = workbook.getWorksheet("DADOS");
-  if (!sheetCapa || !sheetDados) {
-    alert('Template inválido: precisa das abas "CAPA" e "DADOS".');
-    return;
-  }
-
-  // Função auxiliar para definir valores em uma célula por endereço (mantida para células fixas)
-  const setCellValue = (sheet, address, value) => {
-    const cell = sheet.getCell(address);
-    cell.value = value;
-    return cell;
-  };
-
-  // Função auxiliar para definir valores por LINHA e COLUNA (MUITO MAIS SEGURO para preenchimento dinâmico)
-  const setCellByIndices = (sheet, row, col, value) => {
-    const cell = sheet.getCell(row, col);
-    cell.value = value;
-    return cell;
-  };
-
-  // --- 3. Preenchimento CAPA (Células Fixas) ---
-
-  // Strings
-  setCellValue(sheetCapa, "E16", $("nomeCliente").value || "");
-  setCellValue(sheetCapa, "E17", $("cpfCliente").value || "");
-  const codEst =
-    estabelecimentos[$("nomeEstabelecimento").value] ||
-    $("codigoEstabelecimento").value ||
-    "";
-  setCellValue(sheetCapa, "E14", codEst);
-  setCellValue(sheetCapa, "E19", $("canalVenda").value || "");
-
-  // Números
-  // Coluna 'E' é a 5ª coluna (1=A, 2=B, 3=C, 4=D, 5=E)
-  setCellByIndices(sheetCapa, 11, 5, Number($("caixa").value) || 0); // E11 (Caixa)
-
-  // Datas (E10)
-  const dt = $("dataSolicitacao").value; // YYYY-MM-DD
-  if (dt) {
-    setCellByIndices(sheetCapa, 10, 5, new Date(dt + "T00:00:00")); // E10 (Data)
-  }
-
-  // Valor a cancelar (E23)
-  // *** CORREÇÃO APLICADA AQUI ***
-  const valorNum = parseCurrencyToNumber($("valorCancelar").value);
-  setCellByIndices(sheetCapa, 23, 5, isNaN(valorNum) ? 0 : valorNum); // E23 (Valor)
-
-  // --- 4. Preenchimento DADOS (Células Variáveis) ---
-
-  // DADOS - SESCNET (A partir de D8: Linha 8, Coluna 4)
-  if (state.dadosSescnetTable && state.dadosSescnetTable.length) {
-    const startRow = 8;
-    const startCol = 4; // D é a 4ª coluna
-    for (let r = 0; r < state.dadosSescnetTable.length; r++) {
-      const rowData = state.dadosSescnetTable[r];
-      if (!rowData || rowData.length === 0) continue;
-
-      for (let c = 0; c < rowData.length; c++) {
-        const targetRow = startRow + r;
-        const targetCol = startCol + c;
-        setCellByIndices(sheetDados, targetRow, targetCol, rowData[c] || "");
-      }
-    }
-  }
-
-  // DADOS - SiTef Web (Linha 15, a partir de B15: Linha 15, Coluna 2)
-  if (state.sitefType === "web" && state.dadosSitefWeb.length) {
-    const startRow = 15;
-    const startCol = 2; // B é a 2ª coluna
-    state.dadosSitefWeb.forEach((val, c) => {
-      const targetCol = startCol + c;
-      setCellByIndices(sheetDados, startRow, targetCol, val || "");
-    });
-
-    // Mapeamento de Valor para L15 (Coluna 12)
-    if (state.dadosSitefWeb[11]) {
-      setCellByIndices(sheetDados, 15, 12, state.dadosSitefWeb[11]);
-    }
-  }
-
-  // DADOS - SiTef Express (A partir de P22: Colunas 16 e 17)
-  if (
-    state.sitefType === "express" &&
-    Object.keys(state.dadosSitefExpress).length
-  ) {
-    let row = 22;
-    const colKey = 16; // P
-    const colVal = 17; // Q
-
-    Object.entries(state.dadosSitefExpress).forEach(([k, v]) => {
-      setCellByIndices(sheetDados, row, colKey, k);
-      setCellByIndices(sheetDados, row, colVal, v);
-      row++;
-    });
-
-    // Mapeamento de Valor para Q30 (Coluna 17)
-    if (state.dadosSitefExpress["Valor"]) {
-      setCellByIndices(sheetDados, 30, 17, state.dadosSitefExpress["Valor"]);
-    }
-  }
-
-  // --- 5. Grava e baixa o arquivo ---
-  const buffer = await workbook.xlsx.writeBuffer();
-  const blob = new Blob([buffer], {
-    type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-  });
-
-  const name = `solicitacao_preenchida_${new Date()
-    .toISOString()
-    .slice(0, 19)
-    .replace(/[:T]/g, "-")}.xlsx`;
-  triggerDownload(blob, name);
-
-  alert(
-    "Arquivo gerado com ExcelJS! A formatação do template deve ser mantida."
+/* ---------- Montar Resumo ---------- */
+function parseCurrencyToNumber(value) {
+  if (!value) return 0;
+  return Number(
+    value
+      .replace(/\./g, "")
+      .replace(",", ".")
+      .replace(/[^\d.]/g, "")
   );
 }
 
-/* ---------- Utilities: download ---------- */
+function montarResumo() {
+  const valorCard =
+    state.sitefType === "web"
+      ? state.dadosSitefWeb[11] || ""
+      : state.dadosSitefExpress["Valor"] || "";
+
+  $("summaryBox").innerHTML = `
+    <div><b>Cliente:</b> ${$("nomeCliente").value}</div>
+    <div><b>CPF:</b> ${$("cpfCliente").value}</div>
+    <hr>
+    <div><b>Estabelecimento:</b> ${$("nomeEstabelecimento").value}</div>
+    <div><b>Caixa:</b> ${$("caixa").value}</div>
+    <div><b>Venda:</b> ${$("numeroVenda").value}</div>
+    <hr>
+    <div><b>Valor transação cartão:</b> ${valorCard || "(não encontrado)"}</div>
+    <div><b>Valor a cancelar:</b> ${
+      $("valorCancelar").value || "(pendente)"
+    }</div>
+  `;
+}
+
+/* ---------- ExcelJS Export ---------- */
+async function gerarExcelPreenchido() {
+  console.log("Função gerarExcelPreenchido foi chamada!"); // <--- agora aparece
+
+  const valorRaw = $("valorCancelar").value.trim();
+  if (!valorRaw) return alert("Informe o valor a cancelar.");
+
+  const workbook = new ExcelJS.Workbook();
+
+  try {
+    const resp = await fetch("template.xlsx");
+    const buffer = await resp.arrayBuffer();
+    await workbook.xlsx.load(buffer);
+  } catch (e) {
+    return alert("Erro carregando template.xlsx\n" + e.message);
+  }
+
+  const sheetCapa = workbook.getWorksheet("CAPA");
+
+  sheetCapa.getCell("E16").value = $("nomeCliente").value;
+  sheetCapa.getCell("E17").value = $("cpfCliente").value;
+  sheetCapa.getCell("E14").value =
+    estabelecimentos[$("nomeEstabelecimento").value] || "";
+
+  sheetCapa.getCell("E11").value = Number($("caixa").value);
+  sheetCapa.getCell("E10").value = new Date(
+    $("dataSolicitacao").value + "T00:00"
+  );
+
+  sheetCapa.getCell("E23").value = parseCurrencyToNumber(valorRaw);
+
+  // Salvar
+  const out = await workbook.xlsx.writeBuffer();
+  triggerDownload(
+    new Blob([out], {
+      type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    }),
+    "solicitacao_preenchida.xlsx"
+  );
+
+  alert("Arquivo gerado!");
+}
+
+/* ---------- Download utility ---------- */
 function triggerDownload(blob, filename) {
   const a = document.createElement("a");
   a.href = URL.createObjectURL(blob);
   a.download = filename;
-  document.body.appendChild(a);
   a.click();
-  setTimeout(() => {
-    URL.revokeObjectURL(a.href);
-    a.remove();
-  }, 100);
+  setTimeout(() => URL.revokeObjectURL(a.href), 500);
 }
 
-/* ---------- Trigger generation and UX niceties ---------- */
-document
-  .getElementById("btnGenerate")
-  .addEventListener("click", gerarExcelPreenchido);
-
-[
-  "nomeCliente",
-  "cpfCliente",
-  "dataSolicitacao",
-  "caixa",
-  "numeroVenda",
-  "nomeEstabelecimento",
-  "canalVenda",
-].forEach((id) => {
-  const el = $(id);
-  el && el.addEventListener("change", montarResumo);
-});
-
-document.querySelectorAll(".step").forEach((s) => {
-  s.addEventListener("transitionend", () => {
-    if (s.id === "step-6" && s.classList.contains("active")) montarResumo();
-  });
-});
-
-/* Initial display */
-mostrarStep(1);
-updateStepIndicator();
-
-/* End of script.js */
+/* ---------- Botão ---------- */
+$("btnGenerate").addEventListener("click", gerarExcelPreenchido);
