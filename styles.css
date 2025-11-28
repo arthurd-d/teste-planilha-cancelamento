@@ -1,0 +1,217 @@
+/* -------------------------
+   Theme: Estilo B (moderno)
+   Colors: branco / #fcb712 (small) / #004b8e (major)
+   ------------------------- */
+
+:root {
+  --blue: #004b8e;
+  --yellow: #fcb712;
+  --white: #ffffff;
+  --muted: #6b7280;
+  --card-bg: #ffffff;
+  --shadow: 0 8px 24px rgba(2, 6, 23, 0.08);
+  --radius: 12px;
+}
+
+/* Reset */
+* {
+  box-sizing: border-box;
+}
+body {
+  margin: 0;
+  font-family: Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI",
+    Roboto, "Helvetica Neue", Arial;
+  background: #f6f9fc;
+  color: var(--blue);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Header */
+.app-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 18px 28px;
+  background: linear-gradient(90deg, var(--blue), #063a7a);
+  color: white;
+}
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+.brand .logo {
+  background: var(--white);
+  color: var(--blue);
+  font-weight: 800;
+  border-radius: 8px;
+  padding: 8px 12px;
+  box-shadow: var(--shadow);
+}
+.brand .title {
+  font-size: 18px;
+  font-weight: 700;
+}
+.steps .step-indicator {
+  background: rgba(255, 255, 255, 0.08);
+  padding: 8px 12px;
+  border-radius: 8px;
+  color: #f1f5f9;
+  font-weight: 600;
+}
+
+/* main card container */
+.card-container {
+  max-width: 860px;
+  margin: 22px auto;
+  padding: 20px;
+  display: grid;
+  gap: 18px;
+}
+
+/* Card */
+.card {
+  background: var(--card-bg);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 20px;
+  transform-origin: top center;
+  transition: transform 0.28s cubic-bezier(0.2, 0.9, 0.3, 1), opacity 0.22s;
+  opacity: 0;
+  display: none;
+}
+.card.active {
+  opacity: 1;
+  display: block;
+  transform: translateY(0);
+}
+.card h2 {
+  margin: 0 0 12px 0;
+  color: var(--blue);
+  font-size: 20px;
+}
+.muted {
+  color: var(--muted);
+  font-size: 13px;
+  margin-bottom: 12px;
+}
+
+/* Grid for fields */
+.grid-2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+}
+.field {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 12px;
+}
+.field span {
+  font-weight: 600;
+  margin-bottom: 8px;
+  color: var(--blue);
+}
+input[type="text"],
+input[type="date"],
+input[type="number"],
+select,
+textarea {
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid rgba(0, 75, 142, 0.12);
+  background: linear-gradient(180deg, #fff, #fbfdff);
+  outline: none;
+  font-size: 15px;
+  transition: box-shadow 0.15s, transform 0.12s;
+}
+textarea {
+  min-height: 140px;
+  font-family: monospace;
+}
+input:focus,
+select:focus,
+textarea:focus {
+  box-shadow: 0 6px 18px rgba(0, 75, 142, 0.08);
+  transform: translateY(-2px);
+}
+
+/* actions */
+.actions {
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+  margin-top: 8px;
+}
+.btn {
+  border: none;
+  cursor: pointer;
+  padding: 10px 16px;
+  border-radius: 10px;
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  transition: transform 0.12s ease, box-shadow 0.12s;
+}
+.btn:active {
+  transform: translateY(1px);
+}
+.btn.primary {
+  background: var(--blue);
+  color: white;
+  box-shadow: 0 8px 18px rgba(0, 75, 142, 0.12);
+}
+.btn.ghost {
+  background: transparent;
+  color: var(--blue);
+  border: 2px solid rgba(0, 75, 142, 0.06);
+}
+.btn.success {
+  background: #0f9d58;
+  color: white;
+}
+.btn.tile {
+  background: linear-gradient(180deg, var(--yellow), #e6a600);
+  padding: 18px 24px;
+  border-radius: 14px;
+  font-size: 15px;
+  box-shadow: 0 8px 20px rgba(252, 183, 18, 0.12);
+}
+.btn.tile .icon {
+  font-size: 20px;
+}
+
+/* summary box */
+.card-summary {
+  margin-top: 12px;
+  padding: 12px;
+  border-radius: 10px;
+  background: linear-gradient(180deg, #f7fbff, #eef6ff);
+  border: 1px solid rgba(0, 75, 142, 0.06);
+}
+.card-summary b {
+  color: var(--blue);
+}
+
+/* small responsive */
+@media (max-width: 880px) {
+  .card-container {
+    padding: 12px;
+  }
+  .grid-2 {
+    grid-template-columns: 1fr;
+  }
+  .brand .title {
+    font-size: 16px;
+  }
+}
+
+/* helper: icons container — Tabler icons inserted by data-icon attr */
+.icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+}
