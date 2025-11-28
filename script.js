@@ -397,8 +397,16 @@ async function gerarExcelPreenchido() {
 
   // Valor a cancelar (E23)
   // *** CORREÇÃO APLICADA AQUI ***
-  const valorNum = parseCurrencyToNumber($("valorCancelar").value);
-  setCellByIndices(sheetCapa, 23, 5, isNaN(valorNum) ? 0 : valorNum); // E23 (Valor)
+  function parseCurrencyToNumber(value) {
+    // Remove tudo que não for número ou vírgula
+    const cleanedValue = value.replace(/[^0-9,.-]/g, "");
+
+    // Substitui vírgula por ponto para lidar com a separação de decimais
+    const numberValue = cleanedValue.replace(",", ".");
+
+    // Converte a string para um número
+    return parseFloat(numberValue);
+  }
 
   // --- 4. Preenchimento DADOS (Células Variáveis) ---
 
