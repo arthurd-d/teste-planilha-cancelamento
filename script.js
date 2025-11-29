@@ -1,21 +1,4 @@
-/* ----------------------
-    script.js — completo e usando ExcelJS (v3: Correção de Moeda)
-    ---------------------- */
 
-/* ---------- Util: Tabler icons hookup (simple) ---------- */
-/*window.addEventListener("DOMContentLoaded", () => {
-  document.querySelectorAll(".icon").forEach((el) => {
-    const name = el.getAttribute("data-icon");
-    if (!name) return;
-    try {
-      // Assumindo que window.TablerIcons está disponível
-      el.innerHTML = window.TablerIcons[name]().outerHTML;
-    } catch (e) {
-      el.innerHTML =
-        '<svg width="16" height="16"><rect width="16" height="16" fill="#ccc"/></svg>';
-    }
-  });
-});
 
 /* ---------- Estabelecimentos (nome -> código) ---------- */
 const estabelecimentos = {
@@ -110,6 +93,13 @@ function mostrarStep(n) {
 mostrarStep(1);
 updateStepIndicator();
 
+function voltar(targetStep){
+  if (targetStep <1 || targetStep >6) return;
+
+  state.step =targetStep;
+  mostrarStep(targetStep);
+}
+
 /* ---------- Populate Establishments ---------- */
 function populaEstabelecimentos() {
   const sel = $("nomeEstabelecimento");
@@ -150,15 +140,22 @@ $("valorCancelar").addEventListener("input", () => {
 
 /* ---------- Navegação Step 1 ---------- */
 $("btnNext1").addEventListener("click", () => {
-  if (!$("nomeCliente").value.trim()) return alert("Preencha nome do cliente.");
-  if (!$("cpfCliente").value.trim()) return alert("Preencha o CPF.");
-  if (!$("dataSolicitacao").value.trim()) return alert("Preencha a data.");
-  if (!$("caixa").value.trim()) return alert("Preencha o caixa.");
+  if (!$("nomeCliente").value.trim()) 
+      return alert("Preencha nome do cliente.");
+  if (!$("cpfCliente").value.trim()) 
+      return alert("Preencha o CPF.");
+  if(!$("cpfCliente").length < 1)
+    return alert("CPF incompleto");
+  if (!$("dataSolicitacao").value.trim()) 
+      return alert("Preencha a data.");
+  if (!$("caixa").value.trim()) 
+      return alert("Preencha o caixa.");
   if (!$("numeroVenda").value.trim())
     return alert("Preencha o número da venda.");
   if (!$("nomeEstabelecimento").value.trim())
     return alert("Selecione o estabelecimento.");
-  if (!$("canalVenda").value.trim()) return alert("Selecione o canal.");
+  if (!$("canalVenda").value.trim()) 
+      return alert("Selecione o canal.");
 
   mostrarStep(2);
 });
@@ -166,7 +163,8 @@ $("btnNext1").addEventListener("click", () => {
 /* ---------- Step 2 ---------- */
 $("btnNext2").addEventListener("click", () => {
   const raw = $("sescnetInput").value.trim();
-  if (!raw && !confirm("Nenhum dado do SESCNET. Continuar?")) return;
+  if (!$("sescnetInput").value.trim())
+    return alert("Dados do SescNet vazios.")
 
   const lines = raw.split(/\r?\n/).filter(Boolean);
   state.dadosSescnetTable = lines.map((ln) => ln.split(/\t| +/g));

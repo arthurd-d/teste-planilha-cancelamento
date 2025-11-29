@@ -36,21 +36,19 @@ body {
   padding: 18px 28px;
   background: linear-gradient(90deg, var(--blue), #063a7a);
   color: white;
+  
 }
 .brand {
   display: flex;
   align-items: center;
   gap: 14px;
 }
-.logo-container {
-  /* Novo estilo para a área da logo */
-  width: 44px; /* Tamanho da logo */
-  height: 44px;
-  border-radius: 8px;
+.container-fecomercio {
+  padding: 50px;
   display: flex;
-  align-items: center;
   justify-content: center;
 }
+
 .brand .title {
   font-size: 18px;
   font-weight: 700;
