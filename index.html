@@ -1,34 +1,59 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
-<head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Escolha a Casa — Cancelamento</title>
-
-  <!-- estilo -->
-  <link rel="stylesheet" href="styles.css" />
-
-  <!-- favicon (caminho relativo ao projeto) -->
-  <link rel="icon" type="image/png" href="assets/Slogo.png" />
-
-  <!-- meta para melhorar integração em mobile -->
-  <meta name="theme-color" content="#0b1720" />
-</head>
-<body>
-  <a class="skip-link" href="#main">Pular para o conteúdo</a>
-
-  <main id="main" class="choose-container" role="main" aria-labelledby="page-title">
-    <h1 id="page-title">Para qual casa será o cancelamento?</h1>
-
-    <div class="choose-buttons" role="navigation" aria-label="Escolha a casa">
-      <a href="sesc.html" class="choose-btn" aria-label="Ir para cancelamento SESC">SESC</a>
-      <a href="senac.html" class="choose-btn secondary" aria-label="Ir para cancelamento SENAC">SENAC</a>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Acesso - Cancelamento SESC</title>
+    <link rel="stylesheet" href="styles.css" />
+    <link rel="icon" type="image/png" href="/assets/Slogo.png" />
+    <style>
+      /* Estilos básicos para centralizar o formulário de login (pode ser ajustado em styles.css) */
+      body {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        min-height: 100vh;
+        background-color: #f0f4f7;
+        margin: 0;
+      }
+      .login-card {
+        background-color: white;
+        padding: 30px;
+        border-radius: 8px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        width: 100%;
+        max-width: 380px;
+        text-align: center;
+      }
+      .login-card h2 {
+        color: var(--blue); /* Assumindo que você tem uma variável --blue */
+        margin-bottom: 20px;
+      }
+      .login-card .field {
+        margin-bottom: 20px;
+        text-align: left;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="login-card">
+      <h2>Acesso à Solicitação</h2>
+      <div class="field">
+        <label for="emailInput">E-mail Corporativo</label>
+        <input
+          id="emailInput"
+          type="email"
+          placeholder="seu.nome@dominio.com.br"
+        />
+      </div>
+      <button class="btn primary" id="btnLogin" style="width: 100%">
+        Acessar
+      </button>
+      <p id="mensagemErro" style="color: red; margin-top: 15px; display: none;">
+        Acesso não autorizado.
+      </p>
     </div>
-  </main>
 
-  <footer class="site-footer" role="contentinfo" aria-hidden="true">
-    <!-- Mantive o footer vazio para não interferir no layout atual.
-         Adicione aqui versão, copyright, contato etc. se quiser. -->
-  </footer>
-</body>
+    <script src="script-login.js"></script>
+  </body>
 </html>
