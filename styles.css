@@ -134,7 +134,7 @@ textarea {
     transform var(--transition-fast), border-color var(--transition-fast);
 }
 textarea {
-  min-height: 160px;
+  min-height: 80px; /* Redução da altura da textarea */
   font-family: monospace;
 }
 input:focus,
@@ -397,25 +397,58 @@ input[type="number"]::-webkit-inner-spin-button {
   font-size: 14px;
 }
 
-.sescnet-row {
-  display: grid;
-  grid-template-columns: repeat(15, 180px);
-  gap: 6px;
-  margin-bottom: 8px;
-}
 
 .sescnet-row.header div {
   font-weight: bold;
   text-align: center;
+  
+}
+.columns{
+  display:flex;
+  flex-direction: column;  
+  gap: 10px; 
+  margin-bottom: 20px
+}
+.input-container{
+    display:flex;
+    flex-direction: column;  
+    width: 90%;
+    max-width: 1100px;
+    margin: 20px auto; 
+    padding: 20px;
+    border: 1px solid #ccc;
+    border-radius: 8px;
 }
 
-.sescnet-row input {
-  padding: 6px;
-  border: 1px solid #ccc;
-  border-radius: 4px;
+/* Estilo para layout de duas colunas (SescNet, SiTef Web, SiTef Express) */
+.columns-2-flow {
+  display: grid;
+  grid-template-columns: 1fr 1fr; /* 1ª coluna para o nome (span), 2ª para o valor (input) */
+  gap: 10px 20px; /* Gap entre linhas e colunas */
+  margin-bottom: 20px;
 }
 
-.sescnet-row input[readonly] {
-  background: #f2f2f2;
-  cursor: not-allowed;
+/* Garante que o span e o input em .columns-2-flow funcionem em pares */
+.columns-2-flow > span {
+  /* No layout de 1fr 1fr, o span ocupa a primeira metade */
+  margin-bottom: 0; /* Remove margem extra do span */
+  align-self: center; /* Alinha verticalmente */
+  font-weight: 600;
+  color: var(--blue);
+  font-size: 14px;
+}
+
+.columns-2-flow > input {
+  /* O input ocupa a segunda metade */
+}
+
+/* Títulos das Colunas (Step 5 e Step 4) */
+#step-4 .columns-sitef-web > span:nth-child(1),
+#step-4 .columns-sitef-web > span:nth-child(2),
+#step-5 .columns-sitef-express > span:nth-child(1),
+#step-5 .columns-sitef-express > span:nth-child(2) {
+    font-weight: 800;
+    text-transform: uppercase;
+    font-size: 13px;
+    color: #0d47a1; /* Azul um pouco mais escuro para títulos */
 }

@@ -15,7 +15,7 @@
           <div class="title">Cancelamento de Transações</div>
         </div>
         <div class="steps">
-          <div class="step-indicator" id="stepIndicator">Passo 1</div>
+          <div class="step-indicator" id="stepIndicator">Passo 1 de 6</div>
         </div>
       </header>
 <div class="container-fecomercio">
@@ -54,7 +54,7 @@
 
             <label class="field">
               <span>Caixa</span>
-              <input id="caixa" type="number" min="0" placeholder="Caixa que ocorreu a transação"/>
+              <input id="caixa" type="number" min="1" placeholder="Caixa que ocorreu a transação"/>
             </label>
 
             <label class="field">
@@ -62,7 +62,7 @@
               <input
                 id="numeroVenda"
                 type="number"
-                min="0"
+                min="1"
                 placeholder="Título da venda a ser canceladas"
               />
             </label>
@@ -107,34 +107,43 @@
 
         <section class="card step" id="step-2">
           <h2>Dados SESCNET</h2>
-          <div id="input-container" style="
-    width: 90%;
-    max-width: 1100px;
-    margin: 20px auto; 
-    padding: 20px;
-    border: 1px solid #ccc;
-    border-radius: 8px;
-">
-    <h3>Preencha os campos colando os dados tabulados:</h3>
-
-    <div style="display: grid; grid-template-columns: repeat(12, 1fr); gap: 10px; margin-bottom: 20px;">
-        <input type="text" class="col-input" data-col="1" placeholder="Col 1">
-        <input type="text" class="col-input" data-col="2" placeholder="Col 2">
-        <input type="text" class="col-input" data-col="3" placeholder="Col 3">
-        <input type="text" class="col-input" data-col="4" placeholder="Col 4">
-        <input type="text" class="col-input" data-col="5" placeholder="Col 5">
-        <input type="text" class="col-input" data-col="6" placeholder="Col 6">
-        <input type="text" class="col-input" data-col="7" placeholder="Col 7">
-        <input type="text" class="col-input" data-col="8" placeholder="Col 8">
-        <input type="text" class="col-input" data-col="9" placeholder="Col 9">
-        <input type="text" class="col-input" data-col="10" placeholder="Col 10">
-        <input type="text" class="col-input" data-col="11" placeholder="Col 11">
-        <input type="text" class="col-input" data-col="12" placeholder="Col 12">
-    </div>
-
-    <textarea id="paste-area" 
+          <div class="input-container">
+            <h3>Preencha os campos colando os dados do sescnet (CONSULTA TÍTULOS):</h3>
+                <textarea id="paste-area" 
         placeholder="Cole aqui os dados tabulados..." 
-        style="width:100%; height:120px;"></textarea>
+        style="width:100%; height:80px;"></textarea>
+            <div class="columns columns-2-flow">
+                <span>Seq</span>
+                <input type="text" readonly id="seq" data-col="1" class="col-input" placeholder="Seq">
+                <span>Data mvto</span>
+                <input type="text" readonly id="data_sescnet" data-col="2" class="col-input" placeholder="Data mvto">
+                <span>Caixa</span>
+                <input type="text" readonly  data-col="3" class="col-input" placeholder="N caixa">
+                <span>Valor pago</span>
+                <input type="text" readonly id="valor_sescnet" data-col="4" class="col-input" placeholder="Valor pago">
+                <span>Abatimento</span>
+                <input type="text" readonly  data-col="5" class="col-input" placeholder="Abatimento">
+                <span>Juros</span>
+                <input type="text" readonly  data-col="6" class="col-input" placeholder="Juros">
+                <span>Multa</span>
+                <input type="text" readonly  data-col="7" class="col-input" placeholder="Multa">
+                <span>Total geral</span>
+                <input type="text" readonly  data-col="8" class="col-input" placeholder="Total geral">
+                <span>Tipo de liquidação</span>
+                <input type="text" readonly  data-col="9" class="col-input" placeholder="Tipo de liquidação">
+                <span>Operação contábil</span>
+                <input type="text" readonly  data-col="10" class="col-input" placeholder="Op Contábil">
+                <span>N de parcelas</span>
+                <input type="text" readonly  data-col="11" class="col-input" placeholder="Número de parcelas">
+                <span>NSU (TEF)</span>
+                <input type="text" readonly id="nsu_tef" data-col="12" class="col-input" placeholder="TEF - NSU">
+                <span>NSU (web)</span>
+                <input type="text" readonly id="nsu_web" data-col="13" class="col-input" placeholder="WEB - NSU">
+                <span>TID</span>
+                <input type="text" readonly id="tid" data-col="14" class="col-input" placeholder="TID">
+                <span>Data Transação</span>
+                <input type="text" readonly id="data_transacao" data-col="15" class="col-input" placeholder="Data Transação">
+            </div>
 </div>
 
 
@@ -153,7 +162,7 @@
           <p class="muted">Escolha a versão usada.</p>
 
           <div class="sitef-choices">
-            <button class="btn tile" id="sitefWeb">SiTef Wen(Antigo)</button>
+            <button class="btn tile" id="sitefWeb">SiTef Web (Antigo)</button>
             <button class="btn tile" id="sitefExpress">SiTef Express (Novo)</button>
           </div>
 
@@ -163,12 +172,92 @@
         </section>
 
         <section class="card step" id="step-4">
-          <h2>SiTef Web (antigo)</h2>
-          <p class="muted">Cole as informações do SiTef</p>
-          <textarea
-            id="sitefWebInput"
-            placeholder="Cole a linha do SiTef Web aqui"
-          ></textarea>
+          <h2>SiTef Web (antigo) - Relatório Tabular</h2>
+          <p class="muted">Cole a linha de dados tabulados do relatório do SiTef.</p>
+          <div class="input-container">
+            <textarea
+              id="sitefWebInput"
+              placeholder="Cole a linha de dados tabulados (Loja	Data	Hora	PDV	NSU...)"
+              style="width: 100%; height: 80px"
+            ></textarea>
+            
+            <div class="columns-sitef-web columns-2-flow">
+              <span>Nome da Coluna</span>
+              <span>Valor Colado</span>
+
+              <span class="label">Loja</span>
+              <input type="text" readonly class="col-input-sitef-web" placeholder="Loja">
+
+              <span class="label">Data</span>
+              <input type="text" readonly id="data_sitef" class="col-input-sitef-web" placeholder="Data (YYYYMMDD)">
+
+              <span class="label">Hora</span>
+              <input type="text" readonly class="col-input-sitef-web" placeholder="Hora">
+
+              <span class="label">PDV</span>
+              <input type="text" readonly class="col-input-sitef-web" placeholder="PDV">
+
+              <span class="label">NSU</span>
+              <input type="text" readonly id="nsu_sitef" class="col-input-sitef-web" placeholder="NSU">
+
+              <span class="label">NSU Host</span>
+              <input type="text" readonly class="col-input-sitef-web" placeholder="NSU Host">
+              
+              <span class="label">Rede</span>
+              <input type="text" readonly class="col-input-sitef-web" placeholder="Rede">
+              
+              <span class="label">Produto</span>
+              <input type="text" readonly class="col-input-sitef-web" placeholder="Produto">
+
+              <span class="label">Transação</span>
+              <input type="text" readonly class="col-input-sitef-web" placeholder="Transação">
+              
+              <span class="label">Documento</span>
+              <input type="text" readonly id="n_cartao" class="col-input-sitef-web" placeholder="Número do Cartão">
+              
+              <span class="label">Valor</span>
+              <input type="text" readonly id="valor_sitef" class="col-input-sitef-web" placeholder="Valor">
+              
+              <span class="label">Estado Transação</span>
+              <input type="text" readonly class="col-input-sitef-web" placeholder="Estado Transação">
+              
+              <span class="label">Cod. Resp.</span>
+              <input type="text" readonly class="col-input-sitef-web" placeholder="Cod. Resp.">
+              
+              <span class="label">Doc Cancel</span>
+              <input type="text" readonly class="col-input-sitef-web" placeholder="Doc Cancel">
+              
+              <span class="label">Cód. Autor</span>
+              <input type="text" readonly id="aut" class="col-input-sitef-web" placeholder="Cód. Autor">
+
+              <span class="label">No. Parc.</span>
+              <input type="text" readonly class="col-input-sitef-web" placeholder="No. Parc.">
+
+              <span class="label">Data do lanc</span>
+              <input type="text" readonly class="col-input-sitef-web" placeholder="Data do lanc">
+
+              <span class="label">Usuário Pend</span>
+              <input type="text" readonly class="col-input-sitef-web" placeholder="Usuário Pend">
+
+              <span class="label">Data Pend</span>
+              <input type="text" readonly class="col-input-sitef-web" placeholder="Data Pend">
+
+              <span class="label">Hora Pend</span>
+              <input type="text" readonly class="col-input-sitef-web" placeholder="Hora Pend">
+
+              <span class="label">Tempo Resp. Rede</span>
+              <input type="text" readonly class="col-input-sitef-web" placeholder="Tempo Resp. Rede">
+
+              <span class="label">Bandeira</span>
+              <input type="text" readonly class="col-input-sitef-web" placeholder="Bandeira">
+
+              <span class="label">Term. Lógico</span>
+              <input type="text" readonly class="col-input-sitef-web" placeholder="Term. Lógico">
+
+              <span class="label">Operador</span>
+              <input type="text" readonly class="col-input-sitef-web" placeholder="Operador">
+            </div>
+          </div>
 
           <div class="actions">
             <button class="btn ghost" onclick="voltar(3)">Voltar</button>
@@ -177,18 +266,135 @@
         </section>
 
         <section class="card step" id="step-5">
-          <h2>SiTef Express (novo)</h2>
-          <p class="muted">Cole a linha do Consulta títulos</p>
-          <textarea
-            id="sitefExpressInput"
-            placeholder="Ex: Data: 	2025-05-02"
-          ></textarea>
+  <h2>SiTef Express (novo)</h2>
+  <p class="muted">Cole as informações do SiTef Express (Consulta títulos).</p>
 
-          <div class="actions">
-            <button class="btn ghost" onclick="voltar(3)">Voltar</button>
-            <button class="btn primary" id="btnNext5">Próximo</button>
-          </div>
-        </section>
+  <div class="input-container">
+    <textarea
+      id="sitefExpressInput"
+      placeholder="Cole aqui os dados de duas colunas (Nome: Valor)..."
+      style="width: 100%; height: 80px"
+    ></textarea>
+
+    <div class="columns-sitef-express columns-2-flow">
+      <span>Nome da Variável</span>
+      <span>Valor Colado</span>
+
+      <span class="label">Data</span>
+      <input type="text" readonly id="data_sitef_express" class="col-input-sitef" placeholder="Data (Apenas Data)">
+
+      <span class="label">Loja</span>
+      <input type="text" readonly class="col-input-sitef" placeholder="Loja">
+
+      <span class="label">Código Loja</span>
+      <input type="text" readonly class="col-input-sitef" placeholder="Código Loja">
+
+      <span class="label">Cartão</span>
+      <input type="text" readonly id="n_cartao_express" class="col-input-sitef" placeholder="xxxxxx******xxxx">
+
+      <span class="label">PDV</span>
+      <input type="text" readonly class="col-input-sitef" placeholder="PDV">
+
+      <span class="label">NSU</span>
+      <input type="text" readonly id="nsu_sitef_express" class="col-input-sitef" placeholder="NSU">
+
+      <span class="label">NSU Host</span>
+      <input type="text" readonly class="col-input-sitef" placeholder="NSU Host">
+
+      <span class="label">NSU Host Aux</span>
+      <input type="text" readonly class="col-input-sitef" placeholder="NSU Host Aux">
+
+      <span class="label">Valor</span>
+      <input type="text" readonly id="valor_sitef_express" class="col-input-sitef" placeholder="Valor">
+
+      <span class="label">Rede</span>
+      <input type="text" readonly class="col-input-sitef" placeholder="Rede">
+
+      <span class="label">Tipo Produto</span>
+      <input type="text" readonly class="col-input-sitef" placeholder="Tipo Produto">
+
+      <span class="label">Conciliação</span>
+      <input type="text" readonly class="col-input-sitef" placeholder="Conciliação">
+
+      <span class="label">Código Autorização</span>
+      <input type="text" readonly id="aut_express" class="col-input-sitef" placeholder="Código Autorização">
+
+      <span class="label">Estabelecimento</span>
+      <input type="text" readonly id="estab_sitef" class="col-input-sitef" placeholder="Estabelecimento">
+
+      <span class="label">Modo Entrada</span>
+      <input type="text" readonly class="col-input-sitef" placeholder="Modo Entrada">
+
+      <span class="label">Cupom Fiscal</span>
+      <input type="text" readonly class="col-input-sitef" placeholder="Cupom Fiscal">
+
+      <span class="label">Data Fiscal</span>
+      <input type="text" readonly class="col-input-sitef" placeholder="Data Fiscal">
+
+      <span class="label">Produto</span>
+      <input type="text" readonly class="col-input-sitef" placeholder="Produto">
+
+      <span class="label">Descritivo Transação</span>
+      <input type="text" readonly class="col-input-sitef" placeholder="Descritivo Transação">
+
+      <span class="label">Nº. Parcelas</span>
+      <input type="text" readonly class="col-input-sitef" placeholder="Nº. Parcelas">
+
+      <span class="label">Usuário Pendência</span>
+      <input type="text" readonly class="col-input-sitef" placeholder="Usuário Pendência">
+
+      <span class="label">Cód. Cliente</span>
+      <input type="text" readonly class="col-input-sitef" placeholder="Cód. Cliente">
+
+      <span class="label">PSP</span>
+      <input type="text" readonly class="col-input-sitef" placeholder="PSP">
+
+      <span class="label">Num. Pula Ciclos</span>
+      <input type="text" readonly class="col-input-sitef" placeholder="Num. Pula Ciclos">
+
+      <span class="label">Código Operador</span>
+      <input type="text" readonly class="col-input-sitef" placeholder="Código Operador">
+
+      <span class="label">Resp. Rede</span>
+      <input type="text" readonly class="col-input-sitef" placeholder="Resp. Rede">
+
+      <span class="label">Data da pendência</span>
+      <input type="text" readonly class="col-input-sitef" placeholder="Data da pendência">
+
+      <span class="label">Supervisor</span>
+      <input type="text" readonly class="col-input-sitef" placeholder="Supervisor">
+
+      <span class="label">Flag de on/off</span>
+      <input type="text" readonly class="col-input-sitef" placeholder="Flag de on/off">
+
+      <span class="label">Plano</span>
+      <input type="text" readonly class="col-input-sitef" placeholder="Plano">
+
+      <span class="label">Ident. Dossie</span>
+      <input type="text" readonly class="col-input-sitef" placeholder="Ident. Dossie">
+
+      <span class="label">Tipo do Cartão</span>
+      <input type="text" readonly class="col-input-sitef" placeholder="Tipo do Cartão">
+
+      <span class="label">Cod. SiTef</span>
+      <input type="text" readonly class="col-input-sitef" placeholder="Cod. SiTef">
+
+      <span class="label">Terminal Logico</span>
+      <input type="text" readonly class="col-input-sitef" placeholder="Terminal Logico">
+
+      <span class="label">Descrição da Loja</span>
+      <input type="text" readonly class="col-input-sitef" placeholder="Descrição da Loja">
+
+      <span class="label">Formas de Pagamento</span>
+      <input type="text" readonly class="col-input-sitef" placeholder="Formas de Pagamento">
+    </div>
+  </div>
+
+  <div class="actions">
+    <button class="btn ghost" onclick="voltar(3)">Voltar</button>
+    <button class="btn primary" id="btnNext5">Próximo</button>
+  </div>
+</section>
 
         <section class="card step" id="step-6">
           <h2>Valor a cancelar + resumo da solicitação</h2>
@@ -201,7 +407,11 @@
           <div class="summary card-summary" id="summaryBox"></div>
 
           <div class="actions">
-            <button class="btn ghost" onclick="voltar(5)"> Voltar
+            <button class="btn ghost" onclick="voltar(
+              state.canalVenda === 'sitef' 
+                ? (state.sitefType === 'web' ? 4 : 5) 
+                : 2
+            )"> Voltar
             </button>
             <button class="btn success" id="btnGenerate">Baixar arquivo</button>
           </div>
@@ -217,7 +427,6 @@
     </section>
   </div>
 
-  <!-- MODAL PADRÃO -->
   <div id="modal" class="modal hidden">
     <div class="modal-content">
       <h3 id="modal-title">Título</h3>
