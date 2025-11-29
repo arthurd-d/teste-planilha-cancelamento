@@ -96,12 +96,12 @@
           </div>
 
           <div class="actions">
-            <button class="btn ghost" id="btnPreview1">
-              Pré-visualizar
-            </button>
-            <button class="btn primary" id="btnNext1">
-              Próximo
-            </button>
+              <button class="btn ghost btn-clear" onclick="limparStepAtual()">
+                  Limpar Dados
+              </button>
+              <button class="btn primary" id="btnNext1">
+                Próximo
+              </button>
           </div>
         </section>
 
@@ -148,13 +148,16 @@
 
 
           
-          <div class="actions">
+        <div class="actions">
+            <button class="btn ghost btn-clear" onclick="limparStepAtual()">
+                Limpar Dados
+            </button>
             <button class="btn ghost" onclick="voltar(1)">Voltar
             </button>
             <button class="btn primary" id="btnNext2">
                 Próximo
             </button>
-          </div>
+        </div>
         </section>
 
         <section class="card step" id="step-3">
@@ -166,9 +169,16 @@
             <button class="btn tile" id="sitefExpress">SiTef Express (Novo)</button>
           </div>
 
-          <div class="actions">
-            <button class="btn ghost" onclick="voltar(2)"> Voltar </button>
-          </div>
+        <div class="actions">
+            <button class="btn ghost btn-clear" onclick="limparStepAtual()">
+                Limpar Dados
+            </button>
+            <button class="btn ghost" onclick="voltar(1)">Voltar
+            </button>
+            <button class="btn primary" id="btnNext2">
+                Próximo
+            </button>
+        </div>
         </section>
 
         <section class="card step" id="step-4">
@@ -260,8 +270,14 @@
           </div>
 
           <div class="actions">
-            <button class="btn ghost" onclick="voltar(3)">Voltar</button>
-            <button class="btn primary" id="btnNext4">Próximo</button>
+              <button class="btn ghost btn-clear" onclick="limparStepAtual()">
+                  Limpar Dados
+              </button>
+              <button class="btn ghost" onclick="voltar(1)">Voltar
+              </button>
+              <button class="btn primary" id="btnNext2">
+                  Próximo
+              </button>
           </div>
         </section>
 

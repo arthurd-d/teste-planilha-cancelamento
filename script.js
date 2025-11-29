@@ -62,7 +62,7 @@ const estabelecimentos = {
   VIAMÃO: "1045331691",
 };
 
-/* ---------- State Management (Com persistência) ---------- */
+/* ---------- State Management (Modificado para NÃO persistir) ---------- */
 let state = {
   step: 1,
   dadosSescnetTable: [],
@@ -70,30 +70,45 @@ let state = {
   dadosSitefExpress: {},
   sitefType: null,
   canalVenda: null,
-  versao_sitef: null, // NOVO: rastreia qual versão do SiTef foi escolhida
+  versao_sitef: null,
+  // Campos do Passo 1:
+  nomeCliente: null, 
+  cpfCliente: null, 
+  dataSolicitacao: null, 
+  caixa: null, 
+  numeroVenda: null, 
+  nomeEstabelecimento: null,
+  codigoEstabelecimento: null // Adicionado para clareza
 };
 
 const STATE_KEY = "SESC_CANC_STATE";
 
 function saveState() {
-  localStorage.setItem(STATE_KEY, JSON.stringify(state));
+  // Mantido apenas para fins internos, mas NÃO SALVA no localStorage.
+  // localStorage.setItem(STATE_KEY, JSON.stringify(state)); 
 }
 
 function loadState() {
-  const savedState = localStorage.getItem(STATE_KEY);
-  if (savedState) {
-    try {
-      const parsed = JSON.parse(savedState);
-      // Mantém a chave original se a nova não existir, mas carrega o resto
-      state = { ...state, ...parsed };
-      // Garante que o estado carregado é válido
-      if (!state.step) state.step = 1; 
-    } catch (e) {
-      console.error("Erro ao carregar o estado:", e);
-      // Limpa o estado salvo se for inválido
-      localStorage.removeItem(STATE_KEY);
-    }
-  }
+  // Limpa o estado inicial ao carregar a página
+  // Apenas restaura o state para o valor inicial, garantindo que step seja 1
+  state = {
+    step: 1,
+    dadosSescnetTable: [],
+    dadosSitefWeb: [],
+    dadosSitefExpress: {},
+    sitefType: null,
+    canalVenda: null,
+    versao_sitef: null,
+    nomeCliente: null, 
+    cpfCliente: null, 
+    dataSolicitacao: null, 
+    caixa: null, 
+    numeroVenda: null, 
+    nomeEstabelecimento: null,
+    codigoEstabelecimento: null
+  };
+  // Assegura que o localStorage esteja limpo na inicialização
+  localStorage.removeItem(STATE_KEY); 
 }
 
 const $ = (id) => document.getElementById(id);
@@ -115,25 +130,23 @@ function mostrarStep(n) {
   saveState(); // Salva o estado ao mudar de passo
 }
 
-// Carrega o estado ao iniciar a aplicação
+// Carrega o estado ao iniciar a aplicação (limpando o state)
 loadState(); 
-mostrarStep(state.step);
-
 
 function voltar(targetStep) {
   if (targetStep < 1 || targetStep > 6) return;
 
-  // NOVO: Restrição de navegação para o passo de seleção SiTef (Passo 3)
+  // Restrição de navegação para o passo de seleção SiTef (Passo 3)
   if (targetStep === 3 && state.canalVenda === "sitef" && state.versao_sitef) {
-      // Se o canal é SiTef e a versão já foi escolhida, volta para o Passo 2.
-      targetStep = 2;
+      targetStep = 2; // Redireciona para o Passo 2 se a versão SiTef já foi escolhida
   }
   
   state.step = targetStep;
   mostrarStep(targetStep);
 }
 
-/* ---------- Populate Establishments and Auto-Fill Code ---------- */
+
+/* ---------- Populate Establishments and Setup Step 1 Listeners (REVERTED PERSISTENCE) ---------- */
 function populaEstabelecimentos() {
   const sel = $("nomeEstabelecimento");
   if (!sel) return;
@@ -146,38 +159,14 @@ function populaEstabelecimentos() {
 }
 populaEstabelecimentos();
 
-// NOVO: Adiciona listener para preencher o código ao selecionar o estabelecimento
-if ($("nomeEstabelecimento")) {
-  $("nomeEstabelecimento").addEventListener("change", (e) => {
-    const nome = e.target.value;
-    const codigo = estabelecimentos[nome] || "";
-    if ($("codigoEstabelecimento")) $("codigoEstabelecimento").value = codigo;
-  });
-}
 
-// NOVO: Função para carregar os dados dos campos do Passo 1 do state
-function loadStep1Data() {
-    // Apenas carrega se o estado for maior que 1, para evitar sobrescrever a tela inicial
-    if (state.step > 1) {
-        if ($("nomeCliente")) $("nomeCliente").value = state.nomeCliente || "";
-        if ($("cpfCliente")) $("cpfCliente").value = state.cpfCliente || "";
-        if ($("dataSolicitacao")) $("dataSolicitacao").value = state.dataSolicitacao || "";
-        if ($("caixa")) $("caixa").value = state.caixa || "";
-        if ($("numeroVenda")) $("numeroVenda").value = state.numeroVenda || "";
-        if ($("nomeEstabelecimento")) $("nomeEstabelecimento").value = state.nomeEstabelecimento || "";
-        if ($("codigoEstabelecimento")) $("codigoEstabelecimento").value = estabelecimentos[state.nomeEstabelecimento] || "";
-        if ($("canalVenda")) $("canalVenda").value = state.canalVenda || "";
-    }
-}
-loadStep1Data(); // Chama para carregar os dados no início
-
-/* ---------- Masks and Input Filters ---------- */
-
-// Função para forçar o input a ser um número inteiro positivo
+/**
+ * Função para forçar o input a ser um número inteiro positivo
+ */
 function forceIntegerInput(inputElement, min = 1) {
-    let value = inputElement.value.replace(/[^0-9]/g, ''); // Remove tudo que não for dígito
+    let value = inputElement.value.replace(/[^0-9]/g, ''); 
     if (value.startsWith('0') && value.length > 1) {
-        value = value.replace(/^0+/, ''); // Remove zeros à esquerda, a menos que seja apenas '0'
+        value = value.replace(/^0+/, ''); 
     }
     
     let numValue = Number(value);
@@ -192,15 +181,6 @@ function forceIntegerInput(inputElement, min = 1) {
     }
 }
 
-// Aplicar o filtro nos campos de Caixa e Número da Venda
-if ($("caixa")) {
-    $("caixa").addEventListener("input", () => forceIntegerInput($("caixa"), 1));
-}
-if ($("numeroVenda")) {
-    $("numeroVenda").addEventListener("input", () => forceIntegerInput($("numeroVenda"), 1));
-}
-
-
 function maskCPF(input) {
   let v = input.value.replace(/\D/g, "").slice(0, 11);
   v = v.replace(/^(\d{3})(\d)/, "$1.$2");
@@ -208,8 +188,49 @@ function maskCPF(input) {
   v = v.replace(/\.(\d{3})(\d)/, ".$1-$2");
   input.value = v;
 }
-if ($("cpfCliente")) $("cpfCliente").addEventListener("input", () => maskCPF($("cpfCliente")));
 
+/**
+ * Configura os campos do Passo 1:
+ * - Carrega os valores persistidos (state) no DOM.
+ * - Adiciona listeners APENAS para máscaras e validações de UI (não salva o state em tempo real).
+ * - O state será capturado e salvo APENAS ao clicar em "Próximo".
+ */
+function setupStep1() {
+    const fields = ["nomeCliente", "cpfCliente", "dataSolicitacao", "caixa", "numeroVenda", "nomeEstabelecimento", "canalVenda"];
+    
+    fields.forEach(id => {
+        const el = $(id);
+        if (el) {
+            // 1. Carrega o valor do State (se existir)
+            el.value = state[id] || ""; 
+            
+            // 2. Adiciona Listener APENAS para Máscaras e Validações de UI (SEM salvar state)
+            el.addEventListener("input", () => {
+                if (id === "cpfCliente") maskCPF(el);
+                if (id === "caixa" || id === "numeroVenda") forceIntegerInput(el, 1);
+            });
+            
+            // 3. Listener específico para Estabelecimento (Preenche Código)
+            if (id === "nomeEstabelecimento") {
+                 el.addEventListener("change", (e) => {
+                    const nome = e.target.value;
+                    const codigo = estabelecimentos[nome] || "";
+                    if ($("codigoEstabelecimento")) $("codigoEstabelecimento").value = codigo;
+                    state.codigoEstabelecimento = codigo; // Atualiza o state
+                });
+            }
+        }
+    });
+    
+    // Assegura que o código do estabelecimento seja preenchido ao carregar
+    if (state.nomeEstabelecimento && $("codigoEstabelecimento")) {
+        $("codigoEstabelecimento").value = estabelecimentos[state.nomeEstabelecimento] || "";
+    }
+}
+setupStep1(); 
+mostrarStep(state.step); // Mostra o passo inicial após carregar o estado e listeners
+
+/* ---------- Masks and Input Filters - Format Currency ---------- */
 function formatCurrencyInput(el) {
   let v = el.value.replace(/\D/g, "");
   if (!v) return (el.value = "");
@@ -228,8 +249,6 @@ if ($("valorCancelar")) {
   });
 }
 
-/* * Função para formatar o valor bruto do SiTef (ex: 9000) em moeda (ex: R$ 90,00)
- */
 function formatarValorSiTef(valorBruto) {
     if (typeof valorBruto !== 'string' && typeof valorBruto !== 'number') return '(Valor Inválido)';
     
@@ -247,82 +266,64 @@ function formatarValorSiTef(valorBruto) {
 }
 
 
-/* ---------- Navegação Step 1 ---------- */
+/* ---------- Navegação Step 1 (Captura e Salva o Estado) ---------- */
 if ($("btnNext1")) {
   $("btnNext1").addEventListener("click", () => {
-    const nomeCliente = $("nomeCliente");
-    const cpfCliente = $("cpfCliente");
-    const dataSolicitacao = $("dataSolicitacao");
-    const caixa = $("caixa");
-    const numeroVenda = $("numeroVenda");
-    const nomeEstabelecimento = $("nomeEstabelecimento");
-    const canalVenda = $("canalVenda");
+    // 1. Captura os valores do DOM e atualiza o estado
+    state.nomeCliente = $("nomeCliente") ? $("nomeCliente").value : null;
+    state.cpfCliente = $("cpfCliente") ? $("cpfCliente").value : null;
+    state.dataSolicitacao = $("dataSolicitacao") ? $("dataSolicitacao").value : null;
+    state.caixa = $("caixa") ? $("caixa").value : null;
+    state.numeroVenda = $("numeroVenda") ? $("numeroVenda").value : null;
+    state.nomeEstabelecimento = $("nomeEstabelecimento") ? $("nomeEstabelecimento").value : null;
+    state.canalVenda = $("canalVenda") ? $("canalVenda").value : null;
+    state.codigoEstabelecimento = estabelecimentos[state.nomeEstabelecimento] || null;
 
-    if (!nomeCliente || !nomeCliente.value.trim())
+    // 2. Lógica de validação
+    const cpfDigits = (state.cpfCliente || "").replace(/\D/g, "");
+    
+    if (!state.nomeCliente || !state.nomeCliente.trim())
       return showModal("Atenção", "Preencha o nome do cliente.");
-    
-    // Validação CPF
-    if (!cpfCliente || !cpfCliente.value.trim())
-      return showModal("Atenção", "Preencha o CPF.");
-    const cpfDigits = (cpfCliente.value || "").replace(/\D/g, "");
-    if (cpfDigits.length !== 11) return showModal("Atenção", "CPF incompleto");
-
-    if (!dataSolicitacao || !dataSolicitacao.value.trim())
+    if (!state.cpfCliente || cpfDigits.length !== 11) 
+      return showModal("Atenção", "Preencha o CPF corretamente.");
+    if (!state.dataSolicitacao || !state.dataSolicitacao.trim())
       return showModal("Atenção", "Preencha a data.");
-      
-    // Validação Caixa (já forçada no input, mas checa se está vazio/zero)
-    if (!caixa || !caixa.value.trim() || Number(caixa.value) < 1)
+    if (!state.caixa || Number(state.caixa) < 1)
       return showModal("Atenção", "O número do caixa deve ser um número inteiro positivo.");
-      
-    // Validação Número da Venda (Título) (já forçada no input, mas checa se está vazio/zero)
-    if (!numeroVenda || !numeroVenda.value.trim() || Number(numeroVenda.value) < 1)
+    if (!state.numeroVenda || Number(state.numeroVenda) < 1)
       return showModal("Atenção", "O número da venda deve ser um número inteiro positivo.");
-      
-    if (!nomeEstabelecimento || !nomeEstabelecimento.value.trim())
+    if (!state.nomeEstabelecimento || !state.nomeEstabelecimento.trim())
       return showModal("Atenção", "Selecione o estabelecimento.");
-    
-    state.canalVenda = canalVenda ? canalVenda.value : "";
     if (!state.canalVenda)
       return showModal("Atenção", "Selecione o canal.");
-
-    // NOVO: Salva os dados do Passo 1 no state para persistência
-    state.nomeCliente = nomeCliente.value;
-    state.cpfCliente = cpfCliente.value;
-    state.dataSolicitacao = dataSolicitacao.value;
-    state.caixa = caixa.value;
-    state.numeroVenda = numeroVenda.value;
-    state.nomeEstabelecimento = nomeEstabelecimento.value;
-
+    
+    // 3. Salva o estado e prossegue
+    saveState();
     mostrarStep(2);
   });
 }
 
 /* ---------- Funções de Parseamento e Navegação Step 2 (SescNet) ---------- */
 
-/**
- * Faz o parse dos dados brutos do Sescnet colados.
- */
 function parseSescnetData(rawData) {
-    // Foca apenas na primeira linha
     const lines = rawData.split(/\r?\n/).filter(Boolean);
     const EXPECTED_COLS = 15;
 
     const firstLine = lines[0]; 
     if (!firstLine) return [];
 
-    // Divide por tabulação ou múltiplos espaços
     const parts = firstLine.split(/\t| {2,}/g).map(p => p.trim());
 
-    // Remove colunas vazias iniciais se a linha começar com separador
     while (parts.length > 0 && parts[0] === "") parts.shift();
     
-    // Completa linha caso tenha menos de 15 colunas esperadas
     while (parts.length < EXPECTED_COLS) parts.push("");
 
-    // O código original tratava o NSU como [11] ou [12]
-    const nsu_sescnet = (parts[11] !== "0" && parts[11].trim() !== "") 
-                        ? parts[11] 
-                        : (parts[12] !== "0" && parts[12].trim() !== "" ? parts[12] : "");
+    const nsu_tef_raw = parts[11] ? parts[11].trim() : "0";
+    const nsu_web_raw = parts[12] ? parts[12].trim() : "0";
+
+    const nsu_sescnet = (nsu_tef_raw !== "0" && nsu_tef_raw !== "") 
+                        ? nsu_tef_raw 
+                        : (nsu_web_raw !== "0" && nsu_web_raw !== "" ? nsu_web_raw : "");
                         
     const obj = {
         seq: parts[0],
@@ -333,23 +334,23 @@ function parseSescnetData(rawData) {
         juros: parts[5],
         multa: parts[6],
         total_geral: parts[7],
-        tipo_liquidacao: parts[8],
-        operacao_contabil: parts[9],
+        tipo_liquidacao: parts[8], // Índice 8
+        operacao_contabil: parts[9], // Índice 9
         parcelas: parts[10],
-        nsu_tef: parts[11], // TEF - Coluna 12
-        nsu_web: parts[12], // WEB - Coluna 13
-        nsu_sescnet: nsu_sescnet, // NSU consolidado
-        tid_sescnet: parts[13], // Coluna 14
-        data_transacao: parts[14] // Coluna 15
+        nsu_tef: parts[11], 
+        nsu_web: parts[12], 
+        nsu_sescnet: nsu_sescnet,
+        tid_sescnet: parts[13],
+        data_transacao: parts[14] 
     };
 
-    return [obj]; // Retorna um array com o objeto de dados da transação
+    return [obj]; 
 }
 
 
 if ($("btnNext2")) {
   $("btnNext2").addEventListener("click", () => {
-    // Força o preenchimento antes de avançar, no caso de input manual ou erro no paste
+    // Força o processamento dos dados, caso o usuário tenha digitado em vez de colar
     document.getElementById("paste-area").dispatchEvent(new Event('input'));
     
     if (state.dadosSescnetTable.length === 0) {
@@ -358,7 +359,15 @@ if ($("btnNext2")) {
 
     const dadosSescnet = state.dadosSescnetTable[0];
 
-    // NOVO: Validação do TID para e-commerce
+    // NOVO: VALIDAÇÃO PIX NO SESCNET
+    const tipoLiquidacao = dadosSescnet.tipo_liquidacao || "";
+    const operacaoContabil = dadosSescnet.operacao_contabil || "";
+    const pixCheck = "137-PIX VIA TEF/POS";
+    
+    if (tipoLiquidacao.includes(pixCheck) || operacaoContabil.includes(pixCheck)) {
+        return showModal("AVISO", "Operação informada se trata de um PIX, favor prosseguir com uma transação em CARTÃO");
+    }
+
     if (state.canalVenda === "ecommerce") {
         const tid = dadosSescnet.tid_sescnet;
         if (!tid || tid.trim() === "") {
@@ -370,13 +379,11 @@ if ($("btnNext2")) {
     }
 
     if (state.canalVenda === "sitef") {
-        // NOVO: Se o canal é SiTef e a versão já foi escolhida, pula o Passo 3
         if (state.versao_sitef === "web") {
             mostrarStep(4);
         } else if (state.versao_sitef === "express") {
             mostrarStep(5);
         } else {
-            // Se o canal é SiTef mas a versão ainda não foi escolhida, vai para a seleção (Passo 3)
             mostrarStep(3);
         }
     } else {
@@ -391,31 +398,46 @@ document.getElementById("paste-area").addEventListener("paste", function (e) {
     e.preventDefault();
 
     let text = (e.clipboardData || window.clipboardData).getData("text");
-
-    // Coloca o texto completo na área de texto (Temporário)
     this.value = text;
     
-    // Divide por TABs para extrair colunas. Foca na primeira linha.
     let valores = text.split(/\r?\n/)[0].split(/\t/g).map(v => v.trim());
-
-    // Filtra valores vazios iniciais
     while (valores.length > 0 && valores[0] === "") valores.shift();
 
-    // Pega todos os inputs que queremos preencher
     let inputs = document.querySelectorAll("#step-2 .col-input");
-    
     state.dadosSescnetTable = parseSescnetData(text);
 
     inputs.forEach((input, idx) => {
-        // idx corresponde ao índice 0-based dos dados na primeira linha tabulada
-        if (valores[idx] !== undefined) {
-            input.value = valores[idx];
+        if (state.dadosSescnetTable.length > 0) {
+            // Mapeamento explícito baseado no parseSescnetData para garantir a ordem
+            const obj = state.dadosSescnetTable[0];
+            let value = '';
+            
+            // Índices de 0 a 14 na tela
+            switch(idx) {
+                case 0: value = obj.seq; break;
+                case 1: value = obj.data_sescnet; break;
+                case 2: value = obj.caixa_sescnet; break;
+                case 3: value = obj.valor_sescnet; break;
+                case 4: value = obj.abatimento; break;
+                case 5: value = obj.juros; break;
+                case 6: value = obj.multa; break;
+                case 7: value = obj.total_geral; break;
+                case 8: value = obj.tipo_liquidacao; break;
+                case 9: value = obj.operacao_contabil; break;
+                case 10: value = obj.parcelas; break;
+                case 11: value = obj.nsu_tef; break;
+                case 12: value = obj.nsu_web; break;
+                case 13: value = obj.tid_sescnet; break;
+                case 14: value = obj.data_transacao; break;
+                default: value = '';
+            }
+            input.value = value;
         } else {
              input.value = '';
         }
     });
     
-    // Limpa a textarea após o preenchimento
+    // Limpa a textarea imediatamente após processar
     setTimeout(() => { this.value = ''; }, 0); 
 });
 
@@ -423,42 +445,42 @@ document.getElementById("paste-area").addEventListener("paste", function (e) {
 if ($("sitefWeb")) {
   $("sitefWeb").addEventListener("click", () => {
     state.sitefType = "web";
-    state.versao_sitef = "web"; // NOVO: Define a versão
-    // Limpa dados do SiTef Express caso o usuário tenha voltado e escolhido o Web
-    state.dadosSitefExpress = {}; 
+    state.versao_sitef = "web"; 
+    state.dadosSitefExpress = {}; // Limpa o express
+    saveState();
     mostrarStep(4);
   });
 }
 if ($("sitefExpress")) {
   $("sitefExpress").addEventListener("click", () => {
     state.sitefType = "express";
-    state.versao_sitef = "express"; // NOVO: Define a versão
-    // Limpa dados do SiTef Web caso o usuário tenha voltado e escolhido o Express
-    state.dadosSitefWeb = []; 
+    state.versao_sitef = "express"; 
+    state.dadosSitefWeb = []; // Limpa o web
+    saveState();
     mostrarStep(5);
   });
 }
 
-/* ---------- Step 4 → SiTef Web (Antigo) - CORRIGIDO ---------- */
+/* ---------- Step 4 → SiTef Web (Antigo) ---------- */
 
-// Mapeamento dos índices da linha tabulada do SiTef Web para os IDs HTML
-// Índice: 0	    1	    2	    3	    4	    5	        6	    7	        8	        9	        10	    11	                12	            13	        14	        15	        16	            17	            18	        19	        20	                21	        22	            23
 const sitefWebColumnMap = [
-    { label: "Loja", index: 0, id: null },
+    // Índice 7: Produto
+    { label: "Produto", index: 7, id: null }, 
     { label: "Data", index: 1, id: "data_sitef" },
+    { label: "NSU", index: 4, id: "nsu_sitef" },
+    { label: "Documento", index: 9, id: "n_cartao" },
+    { label: "Valor", index: 10, id: "valor_sitef" },
+    { label: "Cód. Autor", index: 14, id: "aut" },
+    // O resto é mapeado implicitamente
+    { label: "Loja", index: 0, id: null },
     { label: "Hora", index: 2, id: null },
     { label: "PDV", index: 3, id: null },
-    { label: "NSU", index: 4, id: "nsu_sitef" },
     { label: "NSU Host", index: 5, id: null },
     { label: "Rede", index: 6, id: null },
-    { label: "Produto", index: 7, id: null },
     { label: "Transação", index: 8, id: null },
-    { label: "Documento", index: 9, id: "n_cartao" }, // Número do Cartão
-    { label: "Valor", index: 10, id: "valor_sitef" },
     { label: "Estado Transação", index: 11, id: null },
     { label: "Cod. Resp.", index: 12, id: null },
     { label: "Doc Cancel", index: 13, id: null },
-    { label: "Cód. Autor", index: 14, id: "aut" },
     { label: "No. Parc.", index: 15, id: null },
     { label: "Data do lanc", index: 16, id: null },
     { label: "Usuário Pend", index: 17, id: null },
@@ -470,32 +492,25 @@ const sitefWebColumnMap = [
     { label: "Operador", index: 23, id: null },
 ];
 
-// Listener para preencher a visualização ao colar no SiTef Web
 if ($("sitefWebInput")) {
     $("sitefWebInput").addEventListener("input", function() {
         const inputEl = this;
         const raw = inputEl.value.trim();
         
-        // Limpa inputs de visualização se o campo estiver vazio
         document.querySelectorAll("#step-4 .col-input-sitef-web").forEach(input => input.value = '');
         state.dadosSitefWeb = []; 
 
         if (!raw) return;
 
-        // Foca apenas na primeira linha tabulada
         const valores = raw.split(/\r?\n/)[0].split(/\t/g).map(v => v.trim());
-        
-        // Remove colunas vazias iniciais
         while (valores.length > 0 && valores[0] === "") valores.shift();
 
-        // SALVA OS DADOS NO STATE
         state.dadosSitefWeb = valores;
+        saveState();
 
-        // Mapeia os dados para os inputs de visualização (pelos rótulos)
         document.querySelectorAll("#step-4 .label").forEach(labelEl => {
             const labelText = labelEl.textContent.trim().replace(/\.$/, '');
             
-            // Encontra o objeto de mapeamento pelo rótulo
             const mapEntry = sitefWebColumnMap.find(item => item.label.replace(/\./g, '').trim() === labelText.replace(/\./g, '').trim());
 
             if (mapEntry) {
@@ -503,16 +518,23 @@ if ($("sitefWebInput")) {
                 const inputResultEl = labelEl.nextElementSibling;
                 
                 if (inputResultEl && inputResultEl.classList.contains("col-input-sitef-web") && valor !== undefined) {
-                    inputResultEl.value = valor;
+                    // Verifica se é valor para formatar (índice 10)
+                    if (mapEntry.index === 10) {
+                        inputResultEl.value = formatarValorSiTef(valor);
+                    } else {
+                        inputResultEl.value = valor;
+                    }
                 }
             }
         });
+
+        // Limpa a textarea imediatamente após processar
+        setTimeout(() => { this.value = ''; }, 0); 
     });
 }
 
 if ($("btnNext4")) {
   $("btnNext4").addEventListener("click", () => {
-    // Garante que o input handler foi executado para preencher o state.dadosSitefWeb
     $("sitefWebInput").dispatchEvent(new Event('input')); 
 
     const dados = state.dadosSitefWeb;
@@ -521,13 +543,17 @@ if ($("btnNext4")) {
     if (dados.length === 0) {
         return showModal("Atenção", "Cole a linha tabulada do SiTef Web (Antigo) na caixa de texto.");
     }
-
     if (dados.length < 15) return showModal("Atenção", "Dados do SiTef Web incompletos. Cole a linha tabulada completa (esperado pelo menos 15 colunas).");
 
     const nsuSitef = dados[4] ? dados[4].trim() : '';
     const nsuSescnet = dadosSescnet.nsu_sescnet ? dadosSescnet.nsu_sescnet.trim() : '';
     
-    // Validação de NSU (Dados SiTef vs Sescnet)
+    // NOVO: VALIDAÇÃO PIX NO SITEF WEB
+    const produtoSitefWeb = dados[7] ? dados[7].trim() : ''; // Index 7 é Produto
+    if (produtoSitefWeb.toUpperCase() === "PIX") {
+        return showModal("AVISO", "Operação informada se trata de um PIX, favor prosseguir com uma transação em CARTÃO");
+    }
+
     if (nsuSitef !== nsuSescnet) {
         return showModal("AVISO", 
             `O NSU do SiTef informado não corresponde ao NSU Sescnet. <br>
@@ -539,30 +565,19 @@ if ($("btnNext4")) {
         );
     }
     
-    // Validação básica de campos críticos pelos novos índices:
-    // Data (Index 1), NSU (Index 4), Cód. Autor (Index 14)
     if (!dados[1] || !dados[4] || !dados[14]) {
         return showModal("Atenção", "Dados críticos (Data, NSU e/ou Cód. Autor) não encontrados nos dados colados do SiTef Web. Verifique se o relatório está completo.");
     }
 
     montarResumo();
-    // Limpa a textarea somente APÓS a validação e antes de avançar
-    $("sitefWebInput").value = ''; 
     mostrarStep(6);
   });
 }
 
-/* ---------- Step 5 → SiTef Express (Novo) - CORRIGIDO ---------- */
+/* ---------- Step 5 → SiTef Express (Novo) ---------- */
 
-/**
- * Função de normalização para chaves de dados colados e labels HTML.
- * Remove ponto final, acentos e substitui múltiplos espaços por um único.
- * @param {string} key 
- * @returns {string} Chave normalizada
- */
 function normalizeKey(key) {
     if (!key) return '';
-    // Remove ponto final, remove acentos, normaliza e substitui múltiplos espaços por um
     return key
         .trim()
         .replace(/\.$/, '') 
@@ -571,14 +586,11 @@ function normalizeKey(key) {
         .replace(/\s+/g, ' '); 
 }
 
-
-// Listener para preencher a visualização ao colar no SiTef Express
 if ($("sitefExpressInput")) {
     $("sitefExpressInput").addEventListener("input", function() {
         const inputEl = this;
         const raw = inputEl.value.trim();
         
-        // Limpa inputs de visualização
         document.querySelectorAll("#step-5 .col-input-sitef").forEach(input => input.value = '');
         state.dadosSitefExpress = {}; 
 
@@ -586,10 +598,8 @@ if ($("sitefExpressInput")) {
 
         const map = {};
         raw.split(/\r?\n/).forEach((ln) => {
-            // Divide por dois pontos (:) seguido por zero ou mais espaços, ou tab
             const parts = ln.split(/:\s*|\t/, 2); 
             if (parts.length === 2) {
-                // Normaliza a chave para corresponder ao HTML
                 let k = normalizeKey(parts[0]);
                 let v = parts[1].trim();
 
@@ -599,9 +609,7 @@ if ($("sitefExpressInput")) {
             }
         });
 
-        // Preenche os campos de visualização
         document.querySelectorAll("#step-5 .label").forEach(labelEl => {
-            // Normaliza a label do HTML
             const labelText = normalizeKey(labelEl.textContent); 
 
             const valor = map[labelText];
@@ -610,7 +618,6 @@ if ($("sitefExpressInput")) {
                 if (inputResultEl && inputResultEl.classList.contains("col-input-sitef")) {
                     
                     if (inputResultEl.id === "data_sitef_express" && valor.length >= 10) {
-                        // REQUERIDO: Pega apenas a data (primeiros 10 caracteres)
                         inputResultEl.value = valor.substring(0, 10);
                     } else {
                         inputResultEl.value = valor;
@@ -619,14 +626,16 @@ if ($("sitefExpressInput")) {
             }
         });
         
-        // SALVA O MAPA COMPLETO NO STATE
         state.dadosSitefExpress = map; 
+        saveState();
+
+        // Limpa a textarea imediatamente após processar
+        setTimeout(() => { this.value = ''; }, 0); 
     });
 }
 
 if ($("btnNext5")) {
   $("btnNext5").addEventListener("click", () => {
-    // Garante que o input handler foi executado
     $("sitefExpressInput").dispatchEvent(new Event('input')); 
 
     const dadosSescnet = state.dadosSescnetTable[0];
@@ -635,15 +644,19 @@ if ($("btnNext5")) {
         return showModal("Atenção", "Cole os dados do SiTef Express. Não foi possível extrair os dados. Verifique o formato.");
     }
 
-    // Requisito: Apenas verifica se a data e o NSU (campos críticos) foram preenchidos no estado normalizado
     if (!state.dadosSitefExpress["Data"] || !state.dadosSitefExpress["NSU"]) {
          return showModal("Atenção", "Não foi possível extrair os dados críticos (Data e NSU) do SiTef Express. Verifique a formatação colada.");
+    }
+    
+    // NOVO: VALIDAÇÃO PIX NO SITEF EXPRESS
+    const tipoProdutoExpress = state.dadosSitefExpress["Tipo produto"] ? state.dadosSitefExpress["Tipo produto"].trim() : '';
+    if (tipoProdutoExpress.toUpperCase() === "PIX") {
+        return showModal("AVISO", "Operação informada se trata de um PIX, favor prosseguir com uma transação em CARTÃO");
     }
 
     const nsuSitef = state.dadosSitefExpress["NSU"] ? state.dadosSitefExpress["NSU"].trim() : '';
     const nsuSescnet = dadosSescnet.nsu_sescnet ? dadosSescnet.nsu_sescnet.trim() : '';
 
-    // Validação de NSU (Dados SiTef vs Sescnet)
     if (nsuSitef !== nsuSescnet) {
         return showModal("AVISO", 
             `O NSU do SiTef informado não corresponde ao NSU Sescnet. <br>
@@ -656,8 +669,6 @@ if ($("btnNext5")) {
     }
 
     montarResumo();
-    // Limpa a textarea somente APÓS a validação e antes de avançar
-    $("sitefExpressInput").value = ''; 
     mostrarStep(6);
   });
 }
@@ -665,12 +676,11 @@ if ($("btnNext5")) {
 /* ---------- Montar Resumo ---------- */
 function parseCurrencyToNumber(value) {
   if (!value) return 0;
-  // Remove pontos (milhar) e substitui vírgula (decimal) por ponto
   return Number(
     value
-      .replace(/[^\d,]/g, "") // Mantém apenas dígitos e vírgula
-      .replace(/\./g, "") // Remove pontos de milhar
-      .replace(",", ".") // Troca vírgula por ponto decimal
+      .replace(/[^\d,]/g, "") 
+      .replace(/\./g, "") 
+      .replace(",", ".") 
   );
 }
 
@@ -684,17 +694,19 @@ function montarResumo() {
   if (state.canalVenda === "sitef") {
     if (state.versao_sitef === "web") {
       const valorBrutoSitef = $("valor_sitef") ? $("valor_sitef").value : '0';
-      valorTransacaoNum = Number(valorBrutoSitef) / 100;
-      valorCardFormatado = formatarValorSiTef(valorBrutoSitef);
+      valorTransacaoNum = parseCurrencyToNumber(valorBrutoSitef); // Pega o valor formatado e converte
+      valorCardFormatado = valorBrutoSitef; // Já está formatado
     } else if (state.versao_sitef === "express") {
       const valorBrutoExpress = state.dadosSitefExpress["Valor"] || "0";
-      valorTransacaoNum = parseCurrencyToNumber(valorBrutoExpress); // Valor numérico para comparação
+      // Tenta extrair o valor numérico da string SiTef Express
+      const valorParaParse = valorBrutoExpress.replace(/[^\d,]/g, "").replace(",", ".");
+      valorTransacaoNum = Number(valorParaParse) || 0;
       
-      const valorParaFormatacao = valorBrutoExpress.replace(/[^0-9,.]/g, '').replace(',', '.');
-      if (!isNaN(parseFloat(valorParaFormatacao)) && parseFloat(valorParaFormatacao) >= 0 && !valorBrutoExpress.includes('R$')) {
-           valorCardFormatado = formatarValorSiTef(valorBrutoExpress.replace(/\D/g, ''));
-      } else {
+      // Formata apenas se for um valor limpo de SiTef. Se for formatado como R$, usa direto
+      if (valorBrutoExpress.includes('R$')) {
            valorCardFormatado = valorBrutoExpress;
+      } else {
+           valorCardFormatado = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(valorTransacaoNum);
       }
     }
   } else if (state.dadosSescnetTable.length > 0) {
@@ -722,10 +734,57 @@ function montarResumo() {
   `;
 }
 
-/* ---------- ExcelJS Export ---------- */
-async function gerarExcelPreenchido() {
-  console.log("Função gerarExcelPreenchido foi chamada!");
+/* ---------- Limpar Step Atual (NOVO BOTÃO) ---------- */
+function limparStepAtual() {
+    switch (state.step) {
+        case 1:
+            // Limpa inputs do Passo 1 e reseta o state
+            document.querySelectorAll("#step-1 input, #step-1 select").forEach(input => input.value = '');
+            document.querySelectorAll("#step-1 select").forEach(select => select.selectedIndex = 0);
+            state = { ...state, 
+                nomeCliente: null, cpfCliente: null, dataSolicitacao: null, caixa: null, numeroVenda: null, 
+                nomeEstabelecimento: null, canalVenda: null, versao_sitef: null, codigoEstabelecimento: null
+            };
+            setupStep1(); // Re-configura listeners e valores iniciais
+            break;
+        case 2:
+            // Limpa dados do Sescnet
+            document.querySelectorAll("#step-2 .col-input").forEach(input => input.value = '');
+            if ($("paste-area")) $("paste-area").value = '';
+            state.dadosSescnetTable = [];
+            break;
+        case 3:
+            // Limpa seleção SiTef, forçando o usuário a re-selecionar ao retornar
+            state.sitefType = null;
+            state.versao_sitef = null;
+            // Não precisa limpar inputs, pois não há inputs no step 3
+            break;
+        case 4:
+            // Limpa SiTef Web
+            document.querySelectorAll("#step-4 .col-input-sitef-web").forEach(input => input.value = '');
+            if ($("sitefWebInput")) $("sitefWebInput").value = '';
+            state.dadosSitefWeb = [];
+            state.versao_sitef = null; 
+            break;
+        case 5:
+            // Limpa SiTef Express
+            document.querySelectorAll("#step-5 .col-input-sitef").forEach(input => input.value = '');
+            if ($("sitefExpressInput")) $("sitefExpressInput").value = '';
+            state.dadosSitefExpress = {};
+            state.versao_sitef = null; 
+            break;
+        case 6:
+            // Limpa valor a cancelar
+            if ($("valorCancelar")) $("valorCancelar").value = '';
+            montarResumo(); 
+            break;
+    }
+    showModal("Limpeza Concluída", `As informações do Passo ${state.step} foram apagadas.`);
+    saveState();
+}
 
+/* ---------- ExcelJS Export (Restante da lógica) ---------- */
+async function gerarExcelPreenchido() {
   const valorCancelarRaw = $("valorCancelar") ? $("valorCancelar").value.trim() : "";
   const valorCancelarNum = parseCurrencyToNumber(valorCancelarRaw);
 
@@ -738,20 +797,20 @@ async function gerarExcelPreenchido() {
   if (state.canalVenda === "sitef") {
     if (state.versao_sitef === "web") {
       const valorBrutoSitef = $("valor_sitef") ? $("valor_sitef").value : '0';
-      valorTransacaoNum = Number(valorBrutoSitef) / 100;
+      valorTransacaoNum = parseCurrencyToNumber(valorBrutoSitef);
     } else if (state.versao_sitef === "express") {
       const valorBrutoExpress = state.dadosSitefExpress["Valor"] || "0";
-      valorTransacaoNum = parseCurrencyToNumber(valorBrutoExpress);
+      const valorParaParse = valorBrutoExpress.replace(/[^\d,]/g, "").replace(",", ".");
+      valorTransacaoNum = Number(valorParaParse) || 0;
     }
   } else if (state.dadosSescnetTable.length > 0) {
      valorTransacaoNum = parseCurrencyToNumber(state.dadosSescnetTable[0].valor_sescnet);
   }
   
-  // NOVO: Validação: Valor a cancelar não pode ser maior que o valor da transação
   if (valorCancelarNum > valorTransacaoNum) {
-      // Usa Math.round para evitar erros de ponto flutuante na formatação do aviso
-      const formatadoCancelar = formatarValorSiTef(Math.round(valorCancelarNum * 100));
-      const formatadoTransacao = formatarValorSiTef(Math.round(valorTransacaoNum * 100));
+      // Para exibir a mensagem, re-formata os números para R$
+      const formatadoCancelar = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(valorCancelarNum);
+      const formatadoTransacao = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(valorTransacaoNum);
 
       return showModal("AVISO", 
           `O valor a cancelar (${formatadoCancelar}) é maior que o valor original da transação (${formatadoTransacao}). <br><br>
@@ -763,7 +822,7 @@ async function gerarExcelPreenchido() {
 
   try {
     showLoading(true, "Carregando template...");
-    // AQUI: Assumimos que 'template.xlsx' está acessível
+    // AQUI: Assumimos que 'template.xlsx' está acessível.
     const resp = await fetch("template.xlsx"); 
     if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
     const buffer = await resp.arrayBuffer();
@@ -781,13 +840,19 @@ async function gerarExcelPreenchido() {
     sheetCapa.getCell("E17").value = state.cpfCliente || "";
     sheetCapa.getCell("E14").value = estabelecimentos[state.nomeEstabelecimento] || "";
 
+    // Converte a data do formato yyyy-mm-dd para objeto Date
+    const [year, month, day] = (state.dataSolicitacao || "").split('-').map(Number);
+    if (year && month && day) {
+        // ExcelJS espera um objeto Date (Date(ano, mês-1, dia))
+        sheetCapa.getCell("E10").value = new Date(year, month - 1, day); 
+    } else {
+         sheetCapa.getCell("E10").value = ""; 
+    }
+    
     sheetCapa.getCell("E11").value = Number(state.caixa || 0);
-    // Data da Solicitação (assumindo formato yyyy-mm-dd)
-    sheetCapa.getCell("E10").value = new Date((state.dataSolicitacao || "") + "T00:00"); 
 
     sheetCapa.getCell("E23").value = valorCancelarNum; // Usa o valor numérico (90.00)
 
-    // Salvar
     const out = await workbook.xlsx.writeBuffer();
     triggerDownload(
       new Blob([out], {
@@ -813,10 +878,10 @@ function triggerDownload(blob, filename) {
   setTimeout(() => URL.revokeObjectURL(a.href), 500);
 }
 
-/* ---------- Botão ---------- */
+/* ---------- Botão Gerar (Step 6) ---------- */
 if ($("btnGenerate")) $("btnGenerate").addEventListener("click", gerarExcelPreenchido);
 
-/* ---------- MODAL SYSTEM (cria dinamicamente se não existir) ---------- */
+/* ---------- MODAL SYSTEM (cria dinamicamente se não existir) e Helpers ---------- */
 (function ensureModalsExist() {
   function createFromHTML(html) {
     const tpl = document.createElement("template");
@@ -857,16 +922,14 @@ if ($("btnGenerate")) $("btnGenerate").addEventListener("click", gerarExcelPreen
   }
 })();
 
-/* ---------- Modal helpers ---------- */
 function showModal(title, message, options = {}) {
   const modal = document.getElementById("modal");
-  if (!modal) return alert(title + "\n\n" + message); 
+  if (!modal) return; 
   const titleEl = document.getElementById("modal-title");
   const msgEl = document.getElementById("modal-message");
   const okBtn = document.getElementById("modal-ok");
 
   titleEl.textContent = title || "";
-  // Permite HTML para a mensagem
   msgEl.innerHTML = message || "";
 
   okBtn.textContent = options.okText || "OK";
@@ -899,5 +962,3 @@ function showLoading(show = true, message = "Carregando...") {
     modal.setAttribute("aria-hidden", "true");
   }
 }
-
-/* ---------- End of script ---------- */
