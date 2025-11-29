@@ -62,7 +62,7 @@ const estabelecimentos = {
   VIAMÃO: "1045331691",
 };
 
-/* ---------- State Management (Modificado para NÃO persistir) ---------- */
+/* ---------- State Management (MODIFICADO: NUNCA PERSISTE) ---------- */
 let state = {
   step: 1,
   dadosSescnetTable: [],
@@ -78,19 +78,18 @@ let state = {
   caixa: null, 
   numeroVenda: null, 
   nomeEstabelecimento: null,
-  codigoEstabelecimento: null // Adicionado para clareza
+  codigoEstabelecimento: null 
 };
 
 const STATE_KEY = "SESC_CANC_STATE";
 
 function saveState() {
-  // Mantido apenas para fins internos, mas NÃO SALVA no localStorage.
-  // localStorage.setItem(STATE_KEY, JSON.stringify(state)); 
+  // A FUNÇÃO NÃO FAZ NADA: IMPEDE QUALQUER PERSISTÊNCIA.
 }
 
 function loadState() {
-  // Limpa o estado inicial ao carregar a página
-  // Apenas restaura o state para o valor inicial, garantindo que step seja 1
+  // LIMPA O ESTADO INICIAL E GARANTE QUE O LOCAL STORAGE ESTEJA VAZIO
+  localStorage.removeItem(STATE_KEY); 
   state = {
     step: 1,
     dadosSescnetTable: [],
@@ -107,8 +106,6 @@ function loadState() {
     nomeEstabelecimento: null,
     codigoEstabelecimento: null
   };
-  // Assegura que o localStorage esteja limpo na inicialização
-  localStorage.removeItem(STATE_KEY); 
 }
 
 const $ = (id) => document.getElementById(id);
@@ -127,10 +124,10 @@ function mostrarStep(n) {
   const el = document.querySelector(`#step-${n}`);
   if (el) el.classList.add("active");
   updateStepIndicator();
-  saveState(); // Salva o estado ao mudar de passo
+  saveState(); 
 }
 
-// Carrega o estado ao iniciar a aplicação (limpando o state)
+// Carrega o estado ao iniciar a aplicação (executa a limpeza)
 loadState(); 
 
 function voltar(targetStep) {
@@ -138,7 +135,7 @@ function voltar(targetStep) {
 
   // Restrição de navegação para o passo de seleção SiTef (Passo 3)
   if (targetStep === 3 && state.canalVenda === "sitef" && state.versao_sitef) {
-      targetStep = 2; // Redireciona para o Passo 2 se a versão SiTef já foi escolhida
+      targetStep = 2; 
   }
   
   state.step = targetStep;
@@ -146,7 +143,7 @@ function voltar(targetStep) {
 }
 
 
-/* ---------- Populate Establishments and Setup Step 1 Listeners (REVERTED PERSISTENCE) ---------- */
+/* ---------- Populate Establishments and Setup Step 1 Listeners ---------- */
 function populaEstabelecimentos() {
   const sel = $("nomeEstabelecimento");
   if (!sel) return;
@@ -191,9 +188,6 @@ function maskCPF(input) {
 
 /**
  * Configura os campos do Passo 1:
- * - Carrega os valores persistidos (state) no DOM.
- * - Adiciona listeners APENAS para máscaras e validações de UI (não salva o state em tempo real).
- * - O state será capturado e salvo APENAS ao clicar em "Próximo".
  */
 function setupStep1() {
     const fields = ["nomeCliente", "cpfCliente", "dataSolicitacao", "caixa", "numeroVenda", "nomeEstabelecimento", "canalVenda"];
@@ -216,7 +210,7 @@ function setupStep1() {
                     const nome = e.target.value;
                     const codigo = estabelecimentos[nome] || "";
                     if ($("codigoEstabelecimento")) $("codigoEstabelecimento").value = codigo;
-                    state.codigoEstabelecimento = codigo; // Atualiza o state
+                    state.codigoEstabelecimento = codigo; 
                 });
             }
         }
@@ -228,7 +222,7 @@ function setupStep1() {
     }
 }
 setupStep1(); 
-mostrarStep(state.step); // Mostra o passo inicial após carregar o estado e listeners
+mostrarStep(state.step); 
 
 /* ---------- Masks and Input Filters - Format Currency ---------- */
 function formatCurrencyInput(el) {
@@ -334,8 +328,8 @@ function parseSescnetData(rawData) {
         juros: parts[5],
         multa: parts[6],
         total_geral: parts[7],
-        tipo_liquidacao: parts[8], // Índice 8
-        operacao_contabil: parts[9], // Índice 9
+        tipo_liquidacao: parts[8], 
+        operacao_contabil: parts[9], 
         parcelas: parts[10],
         nsu_tef: parts[11], 
         nsu_web: parts[12], 
@@ -528,8 +522,8 @@ if ($("sitefWebInput")) {
             }
         });
 
-        // Limpa a textarea imediatamente após processar
-        setTimeout(() => { this.value = ''; }, 0); 
+        // REMOVIDO: setTimeout para limpar a textarea
+        // Se limparmos aqui, a chamada dispatchEvent em btnNext4 esvazia o state.
     });
 }
 
@@ -629,8 +623,8 @@ if ($("sitefExpressInput")) {
         state.dadosSitefExpress = map; 
         saveState();
 
-        // Limpa a textarea imediatamente após processar
-        setTimeout(() => { this.value = ''; }, 0); 
+        // REMOVIDO: setTimeout para limpar a textarea
+        // Se limparmos aqui, a chamada dispatchEvent em btnNext5 esvazia o state.
     });
 }
 
@@ -640,6 +634,7 @@ if ($("btnNext5")) {
 
     const dadosSescnet = state.dadosSescnetTable[0];
 
+    // Aqui usamos o estado que foi populado pelo 'input' disparado
     if (Object.keys(state.dadosSitefExpress).length === 0) {
         return showModal("Atenção", "Cole os dados do SiTef Express. Não foi possível extrair os dados. Verifique o formato.");
     }
@@ -757,7 +752,6 @@ function limparStepAtual() {
             // Limpa seleção SiTef, forçando o usuário a re-selecionar ao retornar
             state.sitefType = null;
             state.versao_sitef = null;
-            // Não precisa limpar inputs, pois não há inputs no step 3
             break;
         case 4:
             // Limpa SiTef Web
@@ -779,7 +773,7 @@ function limparStepAtual() {
             montarResumo(); 
             break;
     }
-    showModal("Limpeza Concluída", `As informações do Passo ${state.step} foram apagadas.`);
+    showModal("Limpeza Concluída", `As informações do **Passo ${state.step}** foram apagadas.`);
     saveState();
 }
 
