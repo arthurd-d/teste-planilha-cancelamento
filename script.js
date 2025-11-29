@@ -1,5 +1,3 @@
-
-
 /* ---------- Estabelecimentos (nome -> código) ---------- */
 const estabelecimentos = {
   "4º DISTRITO - RESTAURANTE": "1006957020",
@@ -77,7 +75,8 @@ const $ = (id) => document.getElementById(id);
 
 /* ---------- Steps ---------- */
 function updateStepIndicator() {
-  $("stepIndicator").textContent = `Passo ${state.step} de 6`;
+  const el = $("stepIndicator");
+  if (el) el.textContent = `Passo ${state.step} de 6`;
 }
 
 function mostrarStep(n) {
@@ -93,16 +92,17 @@ function mostrarStep(n) {
 mostrarStep(1);
 updateStepIndicator();
 
-function voltar(targetStep){
-  if (targetStep <1 || targetStep >6) return;
+function voltar(targetStep) {
+  if (targetStep < 1 || targetStep > 6) return;
 
-  state.step =targetStep;
+  state.step = targetStep;
   mostrarStep(targetStep);
 }
 
 /* ---------- Populate Establishments ---------- */
 function populaEstabelecimentos() {
   const sel = $("nomeEstabelecimento");
+  if (!sel) return;
   Object.keys(estabelecimentos).forEach((nome) => {
     const opt = document.createElement("option");
     opt.value = nome;
@@ -120,7 +120,7 @@ function maskCPF(input) {
   v = v.replace(/\.(\d{3})(\d)/, ".$1-$2");
   input.value = v;
 }
-$("cpfCliente").addEventListener("input", () => maskCPF($("cpfCliente")));
+if ($("cpfCliente")) $("cpfCliente").addEventListener("input", () => maskCPF($("cpfCliente")));
 
 function formatCurrencyInput(el) {
   let v = el.value.replace(/\D/g, "");
@@ -133,84 +133,148 @@ function formatCurrencyInput(el) {
   el.value = `R$ ${intPart},${cents}`;
 }
 
-$("valorCancelar").addEventListener("input", () => {
-  formatCurrencyInput($("valorCancelar"));
-  montarResumo();
-});
+if ($("valorCancelar")) {
+  $("valorCancelar").addEventListener("input", () => {
+    formatCurrencyInput($("valorCancelar"));
+    montarResumo();
+  });
+}
 
 /* ---------- Navegação Step 1 ---------- */
-$("btnNext1").addEventListener("click", () => {
-  if (!$("nomeCliente").value.trim()) 
-      return alert("Preencha nome do cliente.");
-  if (!$("cpfCliente").value.trim()) 
-      return alert("Preencha o CPF.");
-  if(!$("cpfCliente").length < 1)
-    return alert("CPF incompleto");
-  if (!$("dataSolicitacao").value.trim()) 
-      return alert("Preencha a data.");
-  if (!$("caixa").value.trim()) 
-      return alert("Preencha o caixa.");
-  if (!$("numeroVenda").value.trim())
-    return alert("Preencha o número da venda.");
-  if (!$("nomeEstabelecimento").value.trim())
-    return alert("Selecione o estabelecimento.");
-  if (!$("canalVenda").value.trim()) 
-      return alert("Selecione o canal.");
+if ($("btnNext1")) {
+  $("btnNext1").addEventListener("click", () => {
+    if (!$("nomeCliente") || !$("nomeCliente").value.trim())
+      return showModal("Atenção", "Preencha o nome do cliente.");
+    if (!$("cpfCliente") || !$("cpfCliente").value.trim())
+      return showModal("Atenção", "Preencha o CPF.");
+    // Corrigida verificação do CPF para checar quantidade de dígitos
+    const cpfDigits = ($("cpfCliente").value || "").replace(/\D/g, "");
+    if (cpfDigits.length !== 11) return showModal("Atenção", "CPF incompleto");
+    if (!$("dataSolicitacao") || !$("dataSolicitacao").value.trim())
+      return showModal("Atenção", "Preencha a data.");
+    if (!$("caixa") || !$("caixa").value.trim())
+      return showModal("Atenção", "Preencha o caixa.");
+    if (!$("numeroVenda") || !$("numeroVenda").value.trim())
+      return showModal("Atenção", "Preencha o número da venda.");
+    if (!$("nomeEstabelecimento") || !$("nomeEstabelecimento").value.trim())
+      return showModal("Atenção", "Selecione o estabelecimento.");
+    if (!$("canalVenda") || !$("canalVenda").value.trim())
+      return showModal("Atenção", "Selecione o canal.");
 
-  mostrarStep(2);
-});
+    mostrarStep(2);
+  });
+}
 
 /* ---------- Step 2 ---------- */
-$("btnNext2").addEventListener("click", () => {
-  const raw = $("sescnetInput").value.trim();
-  if (!$("sescnetInput").value.trim())
-    return alert("Dados do SescNet vazios.")
+/* ---------- Step 2 ---------- */
+if ($("btnNext2")) {
+  $("btnNext2").addEventListener("click", () => {
 
-  const lines = raw.split(/\r?\n/).filter(Boolean);
-  state.dadosSescnetTable = lines.map((ln) => ln.split(/\t| +/g));
+    const raw = $("sescnetInput") ? $("sescnetInput").value.trim() : "";
+    if (!raw) return showModal("Atenção", "Dados do SescNet vazios.");
 
-  const canal = $("canalVenda").value;
-  if (canal === "sitef") mostrarStep(3);
-  else {
-    montarResumo();
-    mostrarStep(6);
-  }
-});
+    const lines = raw.split(/\r?\n/).filter(Boolean);
+
+    // Define quantidade esperada de colunas
+    const EXPECTED_COLS = 15;
+
+    state.dadosSescnetTable = lines.map((ln) => {
+      const parts = ln.split(/\t| +/g);
+
+      // Completa linhas menores
+      while (parts.length < EXPECTED_COLS) parts.push("");
+
+      const obj = {
+        seq: parts[0],
+        data_sescnet: parts[1],
+        caixa_sescnet: parts[2],
+        valor_sescnet: parts[3],
+        abatimento: parts[4],
+        juros: parts[5],
+        multa: parts[6],
+        total_geral: parts[7],
+        tipo_liquidacao: parts[8],
+        operacao_contabil: parts[9],
+        parcelas: parts[10],
+        nsu_sescnet: parts[11] !== "0" && parts[11] !== "" ? parts[11] : (parts[12] !== "0" ? parts[12] : ""),
+        tid_sescnet: parts[13],
+        data_transacao: parts[14]
+      };
+
+      return obj;
+    });
+
+    console.log("SescNet parseado:", state.dadosSescnetTable);
+
+    const canal = $("canalVenda") ? $("canalVenda").value : "";
+    if (canal === "sitef") mostrarStep(3);
+    else {
+      montarResumo();
+      mostrarStep(6);
+    }
+  });
+}
+
 
 /* ---------- Step 3 → Tipo SiTef ---------- */
-$("sitefWeb").addEventListener("click", () => {
-  state.sitefType = "web";
-  mostrarStep(4);
-});
-$("sitefExpress").addEventListener("click", () => {
-  state.sitefType = "express";
-  mostrarStep(5);
-});
+if ($("sitefWeb")) {
+  $("sitefWeb").addEventListener("click", () => {
+    state.sitefType = "web";
+    mostrarStep(4);
+  });
+}
+if ($("sitefExpress")) {
+  $("sitefExpress").addEventListener("click", () => {
+    state.sitefType = "express";
+    mostrarStep(5);
+  });
+}
 
 /* ---------- Step 4 → SiTef Web ---------- */
-$("btnNext4").addEventListener("click", () => {
-  const txt = $("sitefWebInput").value.trim();
-  if (!txt) return alert("Cole dados do SiTef Web.");
+if ($("btnNext4")) {
+  $("btnNext4").addEventListener("click", () => {
+    const txt = $("sitefWebInput") ? $("sitefWebInput").value.trim() : "";
+    if (!txt) return showModal("Atenção", "Cole os dados do SiTef Web.");
 
-  state.dadosSitefWeb = txt.split("\t");
-  montarResumo();
-  mostrarStep(6);
-});
+    state.dadosSitefWeb = txt.split("\t");
+    montarResumo();
+    mostrarStep(6);
+  });
+}
 
 /* ---------- Step 5 → SiTef Express ---------- */
-$("btnNext5").addEventListener("click", () => {
-  const txt = $("sitefExpressInput").value.trim();
-  if (!txt) return alert("Cole dados do SiTef Express.");
+if ($("btnNext5")) {
+  $("btnNext5").addEventListener("click", () => {
+    const txt = $("sitefExpressInput") ? $("sitefExpressInput").value.trim() : "";
+    if (!txt) return showModal("Atenção", "Cole os dados do SiTef Express.");
 
-  const map = {};
-  txt.split(/\r?\n/).forEach((ln) => {
-    const [k, v] = ln.split("\t");
-    if (k && v) map[k.replace(/:$/, "")] = v.trim();
+    const map = {};
+    txt.split(/\r?\n/).forEach((ln) => {
+      const [k, v] = ln.split("\t");
+      if (k && v) map[k.replace(/:$/, "")] = v.trim();
+    });
+
+    state.dadosSitefExpress = map;
+    montarResumo();
+    mostrarStep(6);
   });
+}
+document.getElementById("paste-area").addEventListener("paste", function (e) {
+    e.preventDefault();
 
-  state.dadosSitefExpress = map;
-  montarResumo();
-  mostrarStep(6);
+    let text = (e.clipboardData || window.clipboardData).getData("text");
+
+    // divide por TAB
+    let valores = text.split("\t");
+
+    // pega todos os inputs
+    let inputs = document.querySelectorAll(".col-input");
+
+    inputs.forEach((input, idx) => {
+        if (valores[idx] !== undefined) {
+            input.value = valores[idx].trim();
+        }
+    });
 });
 
 /* ---------- Montar Resumo ---------- */
@@ -225,67 +289,75 @@ function parseCurrencyToNumber(value) {
 }
 
 function montarResumo() {
+  const summaryBox = $("summaryBox");
+  if (!summaryBox) return;
+
   const valorCard =
     state.sitefType === "web"
       ? state.dadosSitefWeb[11] || ""
       : state.dadosSitefExpress["Valor"] || "";
 
-  $("summaryBox").innerHTML = `
-    <div><b>Cliente:</b> ${$("nomeCliente").value}</div>
-    <div><b>CPF:</b> ${$("cpfCliente").value}</div>
+  summaryBox.innerHTML = `
+    <div><b>Cliente:</b> ${$("nomeCliente" ? "nomeCliente" : "") ? $("nomeCliente").value : ""}</div>
+    <div><b>CPF:</b> ${$("cpfCliente" ? "cpfCliente" : "") ? $("cpfCliente").value : ""}</div>
     <hr>
-    <div><b>Estabelecimento:</b> ${$("nomeEstabelecimento").value}</div>
-    <div><b>Caixa:</b> ${$("caixa").value}</div>
-    <div><b>Venda:</b> ${$("numeroVenda").value}</div>
+    <div><b>Estabelecimento:</b> ${$("nomeEstabelecimento" ? "nomeEstabelecimento" : "") ? $("nomeEstabelecimento").value : ""}</div>
+    <div><b>Caixa:</b> ${$("caixa" ? "caixa" : "") ? $("caixa").value : ""}</div>
+    <div><b>Venda:</b> ${$("numeroVenda" ? "numeroVenda" : "") ? $("numeroVenda").value : ""}</div>
     <hr>
     <div><b>Valor transação cartão:</b> ${valorCard || "(não encontrado)"}</div>
-    <div><b>Valor a cancelar:</b> ${
-      $("valorCancelar").value || "(pendente)"
-    }</div>
+    <div><b>Valor a cancelar:</b> ${$("valorCancelar" ? "valorCancelar" : "") ? $("valorCancelar").value : "(pendente)"}</div>
   `;
 }
 
 /* ---------- ExcelJS Export ---------- */
 async function gerarExcelPreenchido() {
-  console.log("Função gerarExcelPreenchido foi chamada!"); // <--- agora aparece
+  console.log("Função gerarExcelPreenchido foi chamada!");
 
-  const valorRaw = $("valorCancelar").value.trim();
-  if (!valorRaw) return alert("Informe o valor a cancelar.");
+  const valorRaw = $("valorCancelar") ? $("valorCancelar").value.trim() : "";
+  if (!valorRaw) return showModal("Atenção", "Informe o valor a cancelar.");
 
   const workbook = new ExcelJS.Workbook();
 
   try {
+    showLoading(true, "Carregando template...");
     const resp = await fetch("template.xlsx");
+    if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
     const buffer = await resp.arrayBuffer();
     await workbook.xlsx.load(buffer);
   } catch (e) {
-    return alert("Erro carregando template.xlsx\n" + e.message);
+    showLoading(false);
+    return showModal("Erro", "Erro carregando template.xlsx<br>" + (e.message || e));
   }
 
-  const sheetCapa = workbook.getWorksheet("CAPA");
+  try {
+    const sheetCapa = workbook.getWorksheet("CAPA");
 
-  sheetCapa.getCell("E16").value = $("nomeCliente").value;
-  sheetCapa.getCell("E17").value = $("cpfCliente").value;
-  sheetCapa.getCell("E14").value =
-    estabelecimentos[$("nomeEstabelecimento").value] || "";
+    sheetCapa.getCell("E16").value = $("nomeCliente") ? $("nomeCliente").value : "";
+    sheetCapa.getCell("E17").value = $("cpfCliente") ? $("cpfCliente").value : "";
+    sheetCapa.getCell("E14").value =
+      estabelecimentos[$("nomeEstabelecimento") ? $("nomeEstabelecimento").value : ""] || "";
 
-  sheetCapa.getCell("E11").value = Number($("caixa").value);
-  sheetCapa.getCell("E10").value = new Date(
-    $("dataSolicitacao").value + "T00:00"
-  );
+    sheetCapa.getCell("E11").value = Number($("caixa") ? $("caixa").value : 0);
+    sheetCapa.getCell("E10").value = new Date(($("dataSolicitacao") ? $("dataSolicitacao").value : "") + "T00:00");
 
-  sheetCapa.getCell("E23").value = parseCurrencyToNumber(valorRaw);
+    sheetCapa.getCell("E23").value = parseCurrencyToNumber(valorRaw);
 
-  // Salvar
-  const out = await workbook.xlsx.writeBuffer();
-  triggerDownload(
-    new Blob([out], {
-      type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-    }),
-    "solicitacao_preenchida.xlsx"
-  );
+    // Salvar
+    const out = await workbook.xlsx.writeBuffer();
+    triggerDownload(
+      new Blob([out], {
+        type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      }),
+      "solicitacao_preenchida.xlsx"
+    );
 
-  alert("Arquivo gerado!");
+    showLoading(false);
+    showModal("Sucesso", "Arquivo gerado com sucesso!");
+  } catch (e) {
+    showLoading(false);
+    showModal("Erro", "Erro ao gerar arquivo: " + (e.message || e));
+  }
 }
 
 /* ---------- Download utility ---------- */
@@ -298,4 +370,148 @@ function triggerDownload(blob, filename) {
 }
 
 /* ---------- Botão ---------- */
-$("btnGenerate").addEventListener("click", gerarExcelPreenchido);
+if ($("btnGenerate")) $("btnGenerate").addEventListener("click", gerarExcelPreenchido);
+
+/* ---------- MODAL SYSTEM (cria dinamicamente se não existir) ---------- */
+(function ensureModalsExist() {
+  // Simple helper to create element from HTML string
+  function createFromHTML(html) {
+    const tpl = document.createElement("template");
+    tpl.innerHTML = html.trim();
+    return tpl.content.firstChild;
+  }
+
+  // MESSAGE MODAL (ok)
+  if (!document.getElementById("modal")) {
+    const modalHtml = `
+      <div id="modal" class="modal hidden" aria-hidden="true">
+        <div class="modal-content" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+          <h3 id="modal-title" style="margin:0 0 .6rem 0; font-size:18px;"></h3>
+          <div id="modal-message" style="font-size:14px; color:#0b1720; line-height:1.4;"></div>
+          <div class="modal-actions" style="display:flex; justify-content:center; gap:12px; margin-top:1rem;">
+            <button id="modal-ok" class="btn primary" style="min-width:100px; text-transform:none;">OK</button>
+          </div>
+        </div>
+      </div>
+    `;
+    document.body.appendChild(createFromHTML(modalHtml));
+  }
+
+  // CONFIRM MODAL (yes/no)
+  if (!document.getElementById("modalConfirm")) {
+    const confirmHtml = `
+      <div id="modalConfirm" class="modal hidden" aria-hidden="true">
+        <div class="modal-content" role="dialog" aria-modal="true" aria-labelledby="modalConfirm-title">
+          <h3 id="modalConfirm-title" style="margin:0 0 .6rem 0; font-size:18px;"></h3>
+          <div id="modalConfirm-message" style="font-size:14px; color:#0b1720; line-height:1.4;"></div>
+          <div class="modal-actions" style="display:flex; justify-content:center; gap:12px; margin-top:1rem;">
+            <button id="modalConfirm-yes" class="btn success" style="min-width:100px; text-transform:none;">Confirmar</button>
+            <button id="modalConfirm-no" class="btn ghost" style="min-width:100px; text-transform:none;">Cancelar</button>
+          </div>
+        </div>
+      </div>
+    `;
+    document.body.appendChild(createFromHTML(confirmHtml));
+  }
+
+  // LOADING MODAL
+  if (!document.getElementById("modalLoading")) {
+    const loadingHtml = `
+      <div id="modalLoading" class="modal hidden" aria-hidden="true">
+        <div class="modal-content" style="display:flex; align-items:center; gap:12px;">
+          <div class="spinner" aria-hidden="true" style="width:40px;height:40px;border-radius:50%;border:4px solid #e6eef9;border-top-color:var(--blue); animation:spin 1s linear infinite;"></div>
+          <div id="modalLoading-message" style="font-size:14px; color:#0b1720;">Carregando...</div>
+        </div>
+      </div>
+      <style>
+        @keyframes spin { to { transform: rotate(360deg); } }
+      </style>
+    `;
+    document.body.appendChild(createFromHTML(loadingHtml));
+  }
+})();
+
+/* ---------- Modal helpers ---------- */
+function showModal(title, message, options = {}) {
+  // options: { okText, onOk, allowHtml }
+  const modal = document.getElementById("modal");
+  if (!modal) return alert(title + "\n\n" + message); // fallback
+  const titleEl = document.getElementById("modal-title");
+  const msgEl = document.getElementById("modal-message");
+  const okBtn = document.getElementById("modal-ok");
+
+  titleEl.textContent = title || "";
+  if (options.allowHtml) msgEl.innerHTML = message || "";
+  else msgEl.textContent = message || "";
+
+  okBtn.textContent = options.okText || "OK";
+
+  modal.classList.remove("hidden");
+  modal.setAttribute("aria-hidden", "false");
+
+  const cleanup = () => {
+    okBtn.onclick = null;
+    modal.classList.add("hidden");
+    modal.setAttribute("aria-hidden", "true");
+  };
+
+  okBtn.onclick = () => {
+    cleanup();
+    if (typeof options.onOk === "function") options.onOk();
+  };
+}
+
+// returns a Promise for convenience or accepts callbacks
+function showModalConfirm(title, message, onConfirm, onCancel) {
+  const modal = document.getElementById("modalConfirm");
+  if (!modal) {
+    // fallback to confirm
+    const ok = confirm(title + "\n\n" + message);
+    if (ok && typeof onConfirm === "function") onConfirm();
+    else if (!ok && typeof onCancel === "function") onCancel();
+    return;
+  }
+  const titleEl = document.getElementById("modalConfirm-title");
+  const msgEl = document.getElementById("modalConfirm-message");
+  const yesBtn = document.getElementById("modalConfirm-yes");
+  const noBtn = document.getElementById("modalConfirm-no");
+
+  titleEl.textContent = title || "";
+  msgEl.textContent = message || "";
+
+  modal.classList.remove("hidden");
+  modal.setAttribute("aria-hidden", "false");
+
+  const cleanup = () => {
+    yesBtn.onclick = null;
+    noBtn.onclick = null;
+    modal.classList.add("hidden");
+    modal.setAttribute("aria-hidden", "true");
+  };
+
+  yesBtn.onclick = () => {
+    cleanup();
+    if (typeof onConfirm === "function") onConfirm();
+  };
+
+  noBtn.onclick = () => {
+    cleanup();
+    if (typeof onCancel === "function") onCancel();
+  };
+}
+
+function showLoading(show = true, message = "Carregando...") {
+  const modal = document.getElementById("modalLoading");
+  if (!modal) return;
+  const msg = document.getElementById("modalLoading-message");
+  if (msg) msg.textContent = message;
+  if (show) {
+    modal.classList.remove("hidden");
+    modal.setAttribute("aria-hidden", "false");
+  } else {
+    modal.classList.add("hidden");
+    modal.setAttribute("aria-hidden", "true");
+  }
+}
+
+/* ---------- End of script ---------- */
