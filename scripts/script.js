@@ -686,11 +686,22 @@ function montarResumo() {
   let valorCardFormatado = "(Não aplicável)";
   let valorTransacaoNum = 0;
   
-  if (state.canalVenda === "sitef") {
+  // Condições que usam dados Sescnet: E-commerce, POS, ou qualquer outro canal que não seja SiTef,
+  // ou se for SiTef e os dados dele não foram preenchidos (o que não deve acontecer na navegação normal)
+  const isSescnetOnly = state.canalVenda === "ecommerce" || state.canalVenda === "pos";
+
+  if (isSescnetOnly || (state.dadosSescnetTable.length > 0 && state.canalVenda !== "sitef")) {
+     // APLICANDO A REGRA: E-commerce e POS usam o valor_sescnet.
+     valorCardFormatado = state.dadosSescnetTable[0]?.valor_sescnet || "(não encontrado)";
+     valorTransacaoNum = parseCurrencyToNumber(state.dadosSescnetTable[0]?.valor_sescnet);
+  
+  } else if (state.canalVenda === "sitef") {
+    
     if (state.versao_sitef === "web") {
       const valorBrutoSitef = $("valor_sitef") ? $("valor_sitef").value : '0';
       valorTransacaoNum = parseCurrencyToNumber(valorBrutoSitef); // Pega o valor formatado e converte
       valorCardFormatado = valorBrutoSitef; // Já está formatado
+      
     } else if (state.versao_sitef === "express") {
       const valorBrutoExpress = state.dadosSitefExpress["Valor"] || "0";
       // Tenta extrair o valor numérico da string SiTef Express
@@ -704,10 +715,14 @@ function montarResumo() {
            valorCardFormatado = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(valorTransacaoNum);
       }
     }
-  } else if (state.dadosSescnetTable.length > 0) {
+  } 
+  
+  // Se for SiTef mas não encontrou o valor em SiTef (ex: usuário ainda não colou), retorna para o Sescnet.
+  if (valorTransacaoNum === 0 && state.dadosSescnetTable.length > 0 && !isSescnetOnly) {
      valorCardFormatado = state.dadosSescnetTable[0].valor_sescnet || "(não encontrado)";
      valorTransacaoNum = parseCurrencyToNumber(state.dadosSescnetTable[0].valor_sescnet);
   }
+
 
   const nomeCliente = state.nomeCliente || "";
   const cpfCliente = state.cpfCliente || "";
