@@ -224,7 +224,7 @@ function setupStep1() {
 setupStep1(); 
 mostrarStep(state.step); 
 
-/* ---------- Masks and Input Filters - Format Currency ---------- */
+/* ---------- Masks and Input Filters - Format Currency e NSU Normalization ---------- */
 function formatCurrencyInput(el) {
   let v = el.value.replace(/\D/g, "");
   if (!v) return (el.value = "");
@@ -259,6 +259,41 @@ function formatarValorSiTef(valorBruto) {
     }).format(num);
 }
 
+/**
+ * Remove zeros iniciais de uma string numérica para garantir a comparação
+ * de NSUs (ex: "000180" -> "180").
+ */
+function normalizeNSU(nsuString) {
+    if (typeof nsuString !== 'string' || nsuString.trim() === '') return '';
+    
+    // Remove caracteres não-numéricos, converte para número (removendo zeros à esquerda)
+    // e retorna como string. Se for NaN, retorna string vazia.
+    const numericNsu = nsuString.replace(/\D/g, ''); 
+    if (numericNsu === '') return '';
+
+    return String(Number(numericNsu));
+}
+
+/**
+ * Transforma a data de DD/MM/AAAA para 4AAMMDD.
+ * Ex: 28/04/2025 -> 4250428
+ */
+function formatarDataSescnet(dataString) {
+    if (!dataString || dataString.length < 10) return '';
+    
+    // Supondo formato DD/MM/AAAA
+    const parts = dataString.split('/');
+    if (parts.length === 3) {
+        const [dia, mes, ano] = parts;
+        // Pega apenas os dois últimos dígitos do ano (AA)
+        const anoCurto = ano.slice(-2);
+        
+        // Monta a string no formato 4AAMMDD
+        return `4${anoCurto}${mes}${dia}`;
+    }
+    
+    return ''; 
+}
 
 /* ---------- Navegação Step 1 (Captura e Salva o Estado) ---------- */
 if ($("btnNext1")) {
@@ -431,7 +466,7 @@ document.getElementById("paste-area").addEventListener("paste", function (e) {
         }
     });
     
-    // Limpa a textarea imediatamente após processar
+    // Limpa a textarea imediatamente após processar para não exibir o conteúdo colado
     setTimeout(() => { this.value = ''; }, 0); 
 });
 
@@ -494,7 +529,10 @@ if ($("sitefWebInput")) {
         document.querySelectorAll("#step-4 .col-input-sitef-web").forEach(input => input.value = '');
         state.dadosSitefWeb = []; 
 
-        if (!raw) return;
+        if (!raw) {
+             inputEl.value = ''; // Limpa o campo de texto
+             return;
+        }
 
         const valores = raw.split(/\r?\n/)[0].split(/\t/g).map(v => v.trim());
         while (valores.length > 0 && valores[0] === "") valores.shift();
@@ -522,15 +560,15 @@ if ($("sitefWebInput")) {
             }
         });
 
-        // REMOVIDO: setTimeout para limpar a textarea
-        // Se limparmos aqui, a chamada dispatchEvent em btnNext4 esvazia o state.
+        // Limpa a textarea imediatamente após processar e atualizar o state
+        inputEl.value = ''; 
     });
 }
 
 if ($("btnNext4")) {
   $("btnNext4").addEventListener("click", () => {
-    $("sitefWebInput").dispatchEvent(new Event('input')); 
-
+    // AGORA SÓ VALIDA O ESTADO ANTERIORMENTE PREENCHIDO
+    
     const dados = state.dadosSitefWeb;
     const dadosSescnet = state.dadosSescnetTable[0];
     
@@ -539,10 +577,14 @@ if ($("btnNext4")) {
     }
     if (dados.length < 15) return showModal("Atenção", "Dados do SiTef Web incompletos. Cole a linha tabulada completa (esperado pelo menos 15 colunas).");
 
-    const nsuSitef = dados[4] ? dados[4].trim() : '';
-    const nsuSescnet = dadosSescnet.nsu_sescnet ? dadosSescnet.nsu_sescnet.trim() : '';
+    const nsuSitefRaw = dados[4] ? dados[4].trim() : '';
+    const nsuSescnetRaw = dadosSescnet.nsu_sescnet ? dadosSescnet.nsu_sescnet.trim() : '';
     
-    // NOVO: VALIDAÇÃO PIX NO SITEF WEB
+    // Normaliza ambos os NSUs para comparação
+    const nsuSitef = normalizeNSU(nsuSitefRaw);
+    const nsuSescnet = normalizeNSU(nsuSescnetRaw);
+
+    // VALIDAÇÃO PIX NO SITEF WEB
     const produtoSitefWeb = dados[7] ? dados[7].trim() : ''; // Index 7 é Produto
     if (produtoSitefWeb.toUpperCase() === "PIX") {
         return showModal("AVISO", "Operação informada se trata de um PIX, favor prosseguir com uma transação em CARTÃO");
@@ -552,8 +594,8 @@ if ($("btnNext4")) {
         return showModal("AVISO", 
             `O NSU do SiTef informado não corresponde ao NSU Sescnet. <br>
             <br>
-            <b>NSU SITEF:</b> ${nsuSitef}<br>
-            <b>NSU SESCNET:</b> ${nsuSescnet}<br>
+            <b>NSU SITEF (Normalizado):</b> ${nsuSitef} (Original: ${nsuSitefRaw})<br>
+            <b>NSU SESCNET (Normalizado):</b> ${nsuSescnet} (Original: ${nsuSescnetRaw})<br>
             <br>
             Favor revisar as informações`
         );
@@ -569,6 +611,7 @@ if ($("btnNext4")) {
 }
 
 /* ---------- Step 5 → SiTef Express (Novo) ---------- */
+
 
 function normalizeKey(key) {
     if (!key) return '';
@@ -588,7 +631,10 @@ if ($("sitefExpressInput")) {
         document.querySelectorAll("#step-5 .col-input-sitef").forEach(input => input.value = '');
         state.dadosSitefExpress = {}; 
 
-        if (!raw) return;
+        if (!raw) {
+             inputEl.value = ''; // Limpa o campo de texto
+             return;
+        }
 
         const map = {};
         raw.split(/\r?\n/).forEach((ln) => {
@@ -623,18 +669,18 @@ if ($("sitefExpressInput")) {
         state.dadosSitefExpress = map; 
         saveState();
 
-        // REMOVIDO: setTimeout para limpar a textarea
-        // Se limparmos aqui, a chamada dispatchEvent em btnNext5 esvazia o state.
+        // Limpa a textarea imediatamente após processar e atualizar o state
+        inputEl.value = ''; 
     });
 }
 
 if ($("btnNext5")) {
   $("btnNext5").addEventListener("click", () => {
-    $("sitefExpressInput").dispatchEvent(new Event('input')); 
+
 
     const dadosSescnet = state.dadosSescnetTable[0];
 
-    // Aqui usamos o estado que foi populado pelo 'input' disparado
+    // Valida se o estado foi preenchido
     if (Object.keys(state.dadosSitefExpress).length === 0) {
         return showModal("Atenção", "Cole os dados do SiTef Express. Não foi possível extrair os dados. Verifique o formato.");
     }
@@ -643,21 +689,25 @@ if ($("btnNext5")) {
          return showModal("Atenção", "Não foi possível extrair os dados críticos (Data e NSU) do SiTef Express. Verifique a formatação colada.");
     }
     
-    // NOVO: VALIDAÇÃO PIX NO SITEF EXPRESS
-    const tipoProdutoExpress = state.dadosSitefExpress["Tipo produto"] ? state.dadosSitefExpress["Tipo produto"].trim() : '';
+    // VALIDAÇÃO PIX NO SITEF EXPRESS
+    const tipoProdutoExpress = state.dadosSitefExpress["Tipo Produto"] ? state.dadosSitefExpress["Tipo Produto"].trim() : '';
     if (tipoProdutoExpress.toUpperCase() === "PIX") {
         return showModal("AVISO", "Operação informada se trata de um PIX, favor prosseguir com uma transação em CARTÃO");
     }
 
-    const nsuSitef = state.dadosSitefExpress["NSU"] ? state.dadosSitefExpress["NSU"].trim() : '';
-    const nsuSescnet = dadosSescnet.nsu_sescnet ? dadosSescnet.nsu_sescnet.trim() : '';
+    const nsuSitefRaw = state.dadosSitefExpress["NSU"] ? state.dadosSitefExpress["NSU"].trim() : '';
+    const nsuSescnetRaw = dadosSescnet.nsu_sescnet ? dadosSescnet.nsu_sescnet.trim() : '';
+
+    // Normaliza ambos os NSUs para comparação
+    const nsuSitef = normalizeNSU(nsuSitefRaw);
+    const nsuSescnet = normalizeNSU(nsuSescnetRaw);
 
     if (nsuSitef !== nsuSescnet) {
         return showModal("AVISO", 
             `O NSU do SiTef informado não corresponde ao NSU Sescnet. <br>
             <br>
-            <b>NSU SITEF:</b> ${nsuSitef}<br>
-            <b>NSU SESCNET:</b> ${nsuSescnet}<br>
+            <b>NSU SITEF (Normalizado):</b> ${nsuSitef} (Original: ${nsuSitefRaw})<br>
+            <b>NSU SESCNET (Normalizado):</b> ${nsuSescnet} (Original: ${nsuSescnetRaw})<br>
             <br>
             Favor revisar as informações`
         );
@@ -689,40 +739,40 @@ function montarResumo() {
   // Condições que usam dados Sescnet: E-commerce, POS, ou qualquer outro canal que não seja SiTef,
   // ou se for SiTef e os dados dele não foram preenchidos (o que não deve acontecer na navegação normal)
   const isSescnetOnly = state.canalVenda === "ecommerce" || state.canalVenda === "pos";
+  const dadosSescnet = state.dadosSescnetTable[0];
 
-  if (isSescnetOnly || (state.dadosSescnetTable.length > 0 && state.canalVenda !== "sitef")) {
-     // APLICANDO A REGRA: E-commerce e POS usam o valor_sescnet.
-     valorCardFormatado = state.dadosSescnetTable[0]?.valor_sescnet || "(não encontrado)";
-     valorTransacaoNum = parseCurrencyToNumber(state.dadosSescnetTable[0]?.valor_sescnet);
-  
-  } else if (state.canalVenda === "sitef") {
-    
-    if (state.versao_sitef === "web") {
-      const valorBrutoSitef = $("valor_sitef") ? $("valor_sitef").value : '0';
-      valorTransacaoNum = parseCurrencyToNumber(valorBrutoSitef); // Pega o valor formatado e converte
-      valorCardFormatado = valorBrutoSitef; // Já está formatado
+  if (dadosSescnet) {
+      if (isSescnetOnly) {
+         // APLICANDO A REGRA: E-commerce e POS usam o valor_sescnet.
+         valorCardFormatado = dadosSescnet.valor_sescnet || "(não encontrado)";
+         valorTransacaoNum = parseCurrencyToNumber(dadosSescnet.valor_sescnet);
       
-    } else if (state.versao_sitef === "express") {
-      const valorBrutoExpress = state.dadosSitefExpress["Valor"] || "0";
-      // Tenta extrair o valor numérico da string SiTef Express
-      const valorParaParse = valorBrutoExpress.replace(/[^\d,]/g, "").replace(",", ".");
-      valorTransacaoNum = Number(valorParaParse) || 0;
-      
-      // Formata apenas se for um valor limpo de SiTef. Se for formatado como R$, usa direto
-      if (valorBrutoExpress.includes('R$')) {
-           valorCardFormatado = valorBrutoExpress;
-      } else {
-           valorCardFormatado = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(valorTransacaoNum);
-      }
-    }
-  } 
-  
-  // Se for SiTef mas não encontrou o valor em SiTef (ex: usuário ainda não colou), retorna para o Sescnet.
-  if (valorTransacaoNum === 0 && state.dadosSescnetTable.length > 0 && !isSescnetOnly) {
-     valorCardFormatado = state.dadosSescnetTable[0].valor_sescnet || "(não encontrado)";
-     valorTransacaoNum = parseCurrencyToNumber(state.dadosSescnetTable[0].valor_sescnet);
+      } else if (state.canalVenda === "sitef") {
+        
+        if (state.versao_sitef === "web" && state.dadosSitefWeb.length > 0) {
+          const valorBrutoSitef = $("valor_sitef") ? $("valor_sitef").value : '0';
+          valorTransacaoNum = parseCurrencyToNumber(valorBrutoSitef); // Pega o valor formatado e converte
+          valorCardFormatado = valorBrutoSitef; // Já está formatado
+          
+        } else if (state.versao_sitef === "express" && Object.keys(state.dadosSitefExpress).length > 0) {
+          const valorBrutoExpress = state.dadosSitefExpress["Valor"] || "0";
+          // Tenta extrair o valor numérico da string SiTef Express
+          const valorParaParse = valorBrutoExpress.replace(/[^\d,]/g, "").replace(",", ".");
+          valorTransacaoNum = Number(valorParaParse) || 0;
+          
+          // Formata apenas se for um valor limpo de SiTef. Se for formatado como R$, usa direto
+          if (valorBrutoExpress.includes('R$')) {
+               valorCardFormatado = valorBrutoExpress;
+          } else {
+               valorCardFormatado = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(valorTransacaoNum);
+          }
+        } else {
+             // Fallback para Sescnet se SiTef não carregou
+             valorCardFormatado = dadosSescnet.valor_sescnet || "(não encontrado)";
+             valorTransacaoNum = parseCurrencyToNumber(dadosSescnet.valor_sescnet);
+        }
+      } 
   }
-
 
   const nomeCliente = state.nomeCliente || "";
   const cpfCliente = state.cpfCliente || "";
@@ -801,28 +851,50 @@ async function gerarExcelPreenchido() {
     return showModal("Atenção", "Informe um valor a cancelar válido e maior que zero.");
 
   let valorTransacaoNum = 0;
-
-  // 1. Determinar o valor máximo da transação (valor de referência)
+  
+  // Variáveis para preencher a CAPA
+  let n_cartao = "";
+  let valorTransacaoFinal = "";
+  
+  const dadosSescnet = state.dadosSescnetTable[0];
+  
+  // 1. Lógica para determinar o valor de referência e variáveis de CAPA (n_cartao, valor)
   if (state.canalVenda === "sitef") {
-    if (state.versao_sitef === "web") {
+    
+    if (state.versao_sitef === "web" && state.dadosSitefWeb.length > 0) {
       const valorBrutoSitef = $("valor_sitef") ? $("valor_sitef").value : '0';
       valorTransacaoNum = parseCurrencyToNumber(valorBrutoSitef);
-    } else if (state.versao_sitef === "express") {
+      
+      // CAPA
+      n_cartao = state.dadosSitefWeb[9] || "";     // Documento (índice 9)
+      valorTransacaoFinal = valorBrutoSitef; // Valor formatado
+
+    } else if (state.versao_sitef === "express" && Object.keys(state.dadosSitefExpress).length > 0) {
       const valorBrutoExpress = state.dadosSitefExpress["Valor"] || "0";
       const valorParaParse = valorBrutoExpress.replace(/[^\d,]/g, "").replace(",", ".");
       valorTransacaoNum = Number(valorParaParse) || 0;
+
+      // CAPA
+      n_cartao = state.dadosSitefExpress["Número do Cartão"] || "";
+      valorTransacaoFinal = valorBrutoExpress; 
     }
-  } else if (state.dadosSescnetTable.length > 0) {
-     valorTransacaoNum = parseCurrencyToNumber(state.dadosSescnetTable[0].valor_sescnet);
+  } 
+  
+  // Se não for SiTef ou se a extração do SiTef falhou (usa SescNet)
+  if (valorTransacaoNum === 0 && dadosSescnet) {
+     valorTransacaoNum = parseCurrencyToNumber(dadosSescnet.valor_sescnet);
+     
+     // CAPA
+     n_cartao = dadosSescnet.tid_sescnet || dadosSescnet.nsu_sescnet || "";
+     valorTransacaoFinal = dadosSescnet.valor_sescnet || "";
   }
   
+  // 3. Validação do valor (MANTIDA)
   if (valorCancelarNum > valorTransacaoNum) {
-      // Para exibir a mensagem, re-formata os números para R$
       const formatadoCancelar = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(valorCancelarNum);
       const formatadoTransacao = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(valorTransacaoNum);
-
       return showModal("AVISO", 
-          `O valor a cancelar (${formatadoCancelar}) é maior que o valor original da transação (${formatadoTransacao}). <br><br>
+          `O valor a cancelar (**${formatadoCancelar}**) é maior que o valor original da transação (**${formatadoTransacao}**). <br><br>
           Favor ajustar o valor.`
       );
   }
@@ -832,7 +904,7 @@ async function gerarExcelPreenchido() {
   try {
     showLoading(true, "Carregando template...");
     // AQUI: Assumimos que 'template.xlsx' está acessível.
-    const resp = await fetch("template.xlsx"); 
+    const resp = await fetch("/excel/template.xlsx"); 
     if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
     const buffer = await resp.arrayBuffer();
     await workbook.xlsx.load(buffer);
@@ -843,7 +915,12 @@ async function gerarExcelPreenchido() {
 
   try {
     const sheetCapa = workbook.getWorksheet("CAPA");
+    const sheetTransacao = workbook.getWorksheet("TRANSACAO");
     
+    // =======================================================
+    // PREENCHIMENTO DA PLANILHA CAPA (REGRA MANTIDA)
+    // =======================================================
+
     // Preenche a CAPA
     sheetCapa.getCell("E16").value = state.nomeCliente || "";
     sheetCapa.getCell("E17").value = state.cpfCliente || "";
@@ -860,7 +937,56 @@ async function gerarExcelPreenchido() {
     
     sheetCapa.getCell("E11").value = Number(state.caixa || 0);
 
-    sheetCapa.getCell("E23").value = valorCancelarNum; // Usa o valor numérico (90.00)
+    // E23: Valor a Cancelar (Número puro)
+    sheetCapa.getCell("E23").value = valorCancelarNum; 
+    
+    sheetCapa.getCell("E12").value = state.numeroVenda;
+
+    sheetCapa.getCell("E13").value = state.nomeEstabelecimento;
+
+    sheetCapa.getCell("E19").value = state.canalVenda;
+    
+    // Células da CAPA preenchidas com as variáveis
+    sheetCapa.getCell("E20").value = n_cartao;
+    sheetCapa.getCell("E22").value = valorTransacaoFinal;
+
+    // =======================================================
+    // PREENCHIMENTO DA PLANILHA TRANSACAO (NOVA LÓGICA)
+    // =======================================================
+
+    // 1. SESCNET (C3) - CORREÇÃO APLICADA AQUI
+    if (dadosSescnet) {
+        // Gera um array com todos os valores do SescNet
+        const valoresSescnet = Object.values(dadosSescnet);
+        
+        // Cria um objeto para mapear a partir da coluna C (índice 3)
+        // O ExcelJS espera que a chave do objeto seja o índice da coluna.
+        const rowData = { 3: valoresSescnet }; 
+        
+        // Pega a linha 3 e preenche a partir da coluna C
+        sheetTransacao.getRow(3).values = rowData;
+    }
+    
+    // 2. SITEF WEB (C6)
+    if (state.canalVenda === "sitef" && state.versao_sitef === "web" && state.dadosSitefWeb.length > 0) {
+         // Colar valores brutos do SiTef Web na C6 (colunas se expandem)
+         // O índice 3 é a coluna C.
+         sheetTransacao.getRow(6).values = { 3: state.dadosSitefWeb };
+         
+    } 
+    
+    // 3. SITEF EXPRESS (C9, quebrando linha - Chave/Valor)
+    if (state.canalVenda === "sitef" && state.versao_sitef === "express" && Object.keys(state.dadosSitefExpress).length > 0) {
+         // Colar Chave (C) e Valor (D) do SiTef Express a partir da C9
+         let rowNum = 9;
+         for (const [key, value] of Object.entries(state.dadosSitefExpress)) {
+             const row = sheetTransacao.getRow(rowNum);
+             row.getCell('C').value = key;
+             row.getCell('D').value = value;
+             rowNum++;
+         }
+    }
+
 
     const out = await workbook.xlsx.writeBuffer();
     triggerDownload(
@@ -871,7 +997,16 @@ async function gerarExcelPreenchido() {
     );
 
     showLoading(false);
-    showModal("Sucesso", "Arquivo gerado com sucesso!");
+    
+    // LIMPA O ESTADO E REINICIA
+    loadState(); 
+    
+    showModal("Sucesso", "Arquivo gerado com sucesso! O sistema será reiniciado.", {
+        onOk: () => {
+            window.location.href = "/index.html"; 
+        }
+    });
+
   } catch (e) {
     showLoading(false);
     showModal("Erro", "Erro ao gerar arquivo: " + (e.message || e));

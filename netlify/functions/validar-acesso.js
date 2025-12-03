@@ -1,11 +1,13 @@
 exports.handler = async (event) => {
     const DOMINIOS_AUTORIZADOS = [
         "sesc-rs.com.br",
-        "senacrs.com.br"
+        "senacrs.com.br",
+        "SESC-RS.COM.BR",
+        "SENACRS.COM.BR"
     ];
 
     // Página de destino após login autorizado
-    const PAGINA_DESTINO = "sesc.html";
+    const PAGINA_DESTINO = "src/sesc.html";
 
     // Verifica método e corpo
     if (event.httpMethod !== 'POST' || !event.body) {
