@@ -965,7 +965,7 @@ async function gerarExcelPreenchido() {
   if (state.canalVenda === "sitef") {
     if (state.versao_sitef === "web" && state.dadosSitefWeb.length > 0) {
       const valorBrutoSitef = $("valor_sitef") ? $("valor_sitef").value : "0";
-      valorTransacaoNum = parseCurrencyToNumber(valorBrutoSitef); // CAPA
+      valorTransacaoNum = parseCurrencyToNumber(valorBrutoSitef); // CAPA - SITEF WEB
       n_cartao = state.dadosSitefWeb[9] || ""; // Documento (índice 9)
       valorTransacaoFinal = valorBrutoSitef; // Valor formatado
     } else if (
@@ -976,16 +976,18 @@ async function gerarExcelPreenchido() {
       const valorParaParse = valorBrutoExpress
         .replace(/[^\d,]/g, "")
         .replace(",", ".");
-      valorTransacaoNum = Number(valorParaParse) || 0; // CAPA
+      valorTransacaoNum = Number(valorParaParse) || 0; // CAPA - SITEF EXPRESS
 
       n_cartao = state.dadosSitefExpress["Número do Cartão"] || "";
       valorTransacaoFinal = valorBrutoExpress;
     }
-  } // Se não for SiTef ou se a extração do SiTef falhou (usa SescNet)
-  if (valorTransacaoNum === 0 && dadosSescnet) {
-    valorTransacaoNum = parseCurrencyToNumber(dadosSescnet.valor_sescnet); // CAPA // Preferência por TID, depois NSU. Se ambos forem vazios, mantém "" (inicializado no topo)
-    n_cartao = dadosSescnet.tid_sescnet || dadosSescnet.nsu_sescnet || "";
-    valorTransacaoFinal = dadosSescnet.valor_sescnet || "";
+  } else if (state.canalVenda === "ecommerce" || state.canalVenda === "pos") {
+    // Se for E-commerce ou POS, use os dados do SescNet
+    if (dadosSescnet) {
+      valorTransacaoNum = parseCurrencyToNumber(dadosSescnet.valor_sescnet); // CAPA - SESCNET (TID/NSU - APENAS PARA CANAIS SESCNET) // Preferência por TID, depois NSU.
+      n_cartao = dadosSescnet.tid_sescnet || dadosSescnet.nsu_sescnet || "";
+      valorTransacaoFinal = dadosSescnet.valor_sescnet || "";
+    }
   } // 3. Validação do valor
   if (valorCancelarNum > valorTransacaoNum) {
     const formatadoCancelar = new Intl.NumberFormat("pt-BR", {
@@ -1007,14 +1009,14 @@ async function gerarExcelPreenchido() {
   let logoSescId; // REMOVIDOS: logoSescnetId, sitefAntigoId, sitefNovoId;
 
   try {
-    showLoading(true, "Carregando template e imagens..."); // --- 1. CARREGAMENTO E CONVERSÃO DAS IMAGENS --- // REMOVIDOS: sescnetResp, sitefAntigoResp, sitefNovoResp
+    showLoading(true, "Carregando template e imagens..."); // --- 1. CARREGAMENTO E CONVERSÃO DAS IMAGENS --- // APENAS 2 FETCHES: template.xlsx e logo-sesc.png
     const [templateResp, sescResp] = await Promise.all([
       fetch("/excel/template.xlsx"),
       fetch("/assets/logo-sesc.png"),
     ]);
 
     if (!templateResp.ok)
-      throw new Error(`Erro HTTP ao carregar template: ${templateResp.status}`); // REMOVIDA A VALIDAÇÃO DE sescnetResp.ok, sitefAntigoResp.ok, sitefNovoResp.ok
+      throw new Error(`Erro HTTP ao carregar template: ${templateResp.status}`);
     if (!sescResp.ok)
       throw new Error(
         `Erro HTTP ao carregar logo-sesc.png: ${sescResp.status}`
