@@ -105,7 +105,7 @@
         </section>
 
         <section class="card step" id="step-2">
-          <h2>Dados SESCNET</h2>
+          <h2>Dados SESCNET <img src="/assets/logoSESCNET.png" alt="Logo SescNet" style="height: 20px; vertical-align: middle;"></h2>
           <div class="input-container">
             <h3>Preencha os campos colando os dados do sescnet (CONSULTA TÍTULOS):</h3>
                 <textarea id="paste-area" 
@@ -126,23 +126,26 @@
                 <input type="text" readonly  data-col="6" class="col-input" placeholder="Juros">
                 <span>Multa</span>
                 <input type="text" readonly  data-col="7" class="col-input" placeholder="Multa">
+                
+                <span>Outros Pgto</span>
+                <input type="text" readonly data-col="8" class="col-input" placeholder="Outros Pgto">
+                
                 <span>Total geral</span>
-                <input type="text" readonly  data-col="8" class="col-input" placeholder="Total geral">
+                <input type="text" readonly  data-col="9" class="col-input" placeholder="Total geral">
                 <span>Tipo de liquidação</span>
-                <input type="text" readonly  data-col="9" class="col-input" placeholder="Tipo de liquidação">
+                <input type="text" readonly  data-col="10" class="col-input" placeholder="Tipo de liquidação">
                 <span>Operação contábil</span>
-                <input type="text" readonly  data-col="10" class="col-input" placeholder="Op Contábil">
+                <input type="text" readonly  data-col="11" class="col-input" placeholder="Op Contábil">
                 <span>N de parcelas</span>
-                <input type="text" readonly  data-col="11" class="col-input" placeholder="Número de parcelas">
+                <input type="text" readonly  data-col="12" class="col-input" placeholder="Número de parcelas">
                 <span>NSU (TEF)</span>
-                <input type="text" readonly id="nsu_tef" data-col="12" class="col-input" placeholder="TEF - NSU">
+                <input type="text" readonly id="nsu_tef" data-col="13" class="col-input" placeholder="TEF - NSU">
                 <span>NSU (web)</span>
-                <input type="text" readonly id="nsu_web" data-col="13" class="col-input" placeholder="WEB - NSU">
+                <input type="text" readonly id="nsu_web" data-col="14" class="col-input" placeholder="WEB - NSU">
                 <span>TID</span>
-                <input type="text" readonly id="tid" data-col="14" class="col-input" placeholder="TID">
-                <span>Data Transação</span>
-                <input type="text" readonly id="data_transacao" data-col="15" class="col-input" placeholder="Data Transação">
-            </div>
+                <input type="text" readonly id="tid" data-col="15" class="col-input" placeholder="TID">
+                
+                </div>
 </div>
 
 
@@ -164,8 +167,14 @@
           <p class="muted">Escolha a versão usada.</p>
 
           <div class="sitef-choices">
-            <button class="btn tile" id="sitefWeb">SiTef Web (Antigo)</button>
-            <button class="btn tile" id="sitefExpress">SiTef Express (Novo)</button>
+            <button class="btn tile" id="sitefWeb">
+              <img src="/assets/sitefantigo.jpg" alt="Logo SiTef Web" style="height: 30px; margin-bottom: 8px;"><br>
+              SiTef Web (Antigo)
+            </button>
+            <button class="btn tile" id="sitefExpress">
+              <img src="/assets/sitefnovo.jpg" alt="Logo SiTef Express" style="height: 30px; margin-bottom: 8px;"><br>
+              SiTef Express (Novo)
+            </button>
           </div>
 
         <div class="actions">
@@ -181,12 +190,12 @@
         </section>
 
         <section class="card step" id="step-4">
-          <h2>SiTef Web (antigo) - Relatório Tabular</h2>
+          <h2>SiTef Web (antigo) - Relatório Tabular <img src="/assets/sitefantigo.jpg" alt="Logo SiTef Web" style="height: 20px; vertical-align: middle;"></h2>
           <p class="muted">Cole a linha de dados tabulados do relatório do SiTef.</p>
           <div class="input-container">
             <textarea
               id="sitefWebInput"
-              placeholder="Cole a linha de dados tabulados (Loja	Data	Hora	PDV	NSU...)"
+              placeholder="Cole a linha de dados tabulados (Loja  Data  Hora  PDV NSU...)"
               style="width: 100%; height: 80px"
             ></textarea>
             
@@ -281,7 +290,7 @@
         </section>
 
         <section class="card step" id="step-5">
-  <h2>SiTef Express (novo)</h2>
+  <h2>SiTef Express (novo) <img src="/assets/sitefnovo.jpg" alt="Logo SiTef Express" style="height: 20px; vertical-align: middle;"></h2>
   <p class="muted">Cole as informações do SiTef Express (Consulta títulos).</p>
 
   <div class="input-container">

@@ -16,6 +16,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     async function validarAcesso(e) {
+        
         // ESSENCIAL: Previne o envio padrão do formulário, que recarrega a página
         if (e && e.type === 'submit') {
             e.preventDefault(); 
@@ -46,11 +47,12 @@ document.addEventListener('DOMContentLoaded', () => {
             if (!response.ok) {
                 throw new Error(`Erro HTTP: ${response.status}`);
             }
-
+            
             const data = await response.json();
 
             // 2. Lida com a resposta do servidor
             if (data.status === 'autorizado') {
+                localStorage.setItem('userEmail', email)
                 // Redireciona APENAS se o servidor autorizou
                 window.location.href = data.redirect;
             } else {
@@ -65,6 +67,10 @@ document.addEventListener('DOMContentLoaded', () => {
             // Reabilita o botão
             btnLogin.disabled = false;
         }
+        const data = await response.json();
+
+
+        
     }
 
     // Ouve o evento de submit do formulário, que é mais robusto que o clique isolado no botão

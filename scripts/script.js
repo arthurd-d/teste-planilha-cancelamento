@@ -334,43 +334,83 @@ if ($("btnNext1")) {
 
 /* ---------- Funções de Parseamento e Navegação Step 2 (SescNet) ---------- */
 
+// Novo padrão de colunas esperadas (era 15)
+const EXPECTED_COLS_SESCNET = 14; 
+
 function parseSescnetData(rawData) {
     const lines = rawData.split(/\r?\n/).filter(Boolean);
-    const EXPECTED_COLS = 15;
 
     const firstLine = lines[0]; 
     if (!firstLine) return [];
 
     const parts = firstLine.split(/\t| {2,}/g).map(p => p.trim());
 
+    // Remove colunas vazias iniciais
     while (parts.length > 0 && parts[0] === "") parts.shift();
     
-    while (parts.length < EXPECTED_COLS) parts.push("");
+    const numColunas = parts.length;
+    let partsMapeamento = [...parts];
 
-    const nsu_tef_raw = parts[11] ? parts[11].trim() : "0";
-    const nsu_web_raw = parts[12] ? parts[12].trim() : "0";
+    // LÓGICA DE DETECÇÃO E AJUSTE DE COLUNAS
+    let outrosPgto = "";
+    let baseIndex = 0;
+    
+    if (numColunas === 15) {
+        // Se houver 15 colunas, a 8ª coluna (índice 7) é 'Outros Pgto' e o array 
+        // de mapeamento deve ser baseado no array original. 
+        outrosPgto = partsMapeamento[7];
+        // Se a coluna 7 existe, todos os campos de índice 8 em diante na visão do usuário
+        // estão uma posição à frente.
+        baseIndex = 1; 
+    } else if (numColunas === 14) {
+        // Se houver 14 colunas, o índice 7 é o 'Total Geral'
+        outrosPgto = "";
+        baseIndex = 0;
+    }
+    
+    // Mapeamento dos índices (Ajustados com base no baseIndex)
+    // Índice 0 a 6: Seq até Multa (são fixos)
+    // Índice 7: Outros Pgto (se existir, é o parts[7])
+    // Índice 8: Total Geral (parts[7] ou parts[8])
+    // Índice 9: Tipo Liquidacao (parts[8] ou parts[9])
+    
+    const idx_total_geral = 7 + baseIndex;
+    const idx_tipo_liquidacao = 8 + baseIndex;
+    const idx_operacao_contabil = 9 + baseIndex;
+    const idx_parcelas = 10 + baseIndex;
+    const idx_nsu_tef = 11 + baseIndex;
+    const idx_nsu_web = 12 + baseIndex;
+    const idx_tid = 13 + baseIndex;
+    
+    // GARANTIA: Preenche o mapeamento para evitar acessos a índices que não existem
+    while (partsMapeamento.length < idx_tid + 1) partsMapeamento.push("");
 
+    const nsu_tef_raw = partsMapeamento[idx_nsu_tef] ? partsMapeamento[idx_nsu_tef].trim() : ""; 
+    const nsu_web_raw = partsMapeamento[idx_nsu_web] ? partsMapeamento[idx_nsu_web].trim() : ""; 
+
+    // Lógica para determinar o NSU principal (se houver)
     const nsu_sescnet = (nsu_tef_raw !== "0" && nsu_tef_raw !== "") 
                         ? nsu_tef_raw 
                         : (nsu_web_raw !== "0" && nsu_web_raw !== "" ? nsu_web_raw : "");
                         
     const obj = {
-        seq: parts[0],
-        data_sescnet: parts[1],
-        caixa_sescnet: parts[2],
-        valor_sescnet: parts[3],
-        abatimento: parts[4],
-        juros: parts[5],
-        multa: parts[6],
-        total_geral: parts[7],
-        tipo_liquidacao: parts[8], 
-        operacao_contabil: parts[9], 
-        parcelas: parts[10],
-        nsu_tef: parts[11], 
-        nsu_web: parts[12], 
+        seq: partsMapeamento[0],
+        data_sescnet: partsMapeamento[1],
+        caixa_sescnet: partsMapeamento[2],
+        valor_sescnet: partsMapeamento[3],
+        abatimento: partsMapeamento[4],
+        juros: partsMapeamento[5],
+        multa: partsMapeamento[6],
+        // O campo que você vê como 7 (Outros Pgto)
+        outros_pgto: outrosPgto, 
+        total_geral: partsMapeamento[idx_total_geral], 
+        tipo_liquidacao: partsMapeamento[idx_tipo_liquidacao], 
+        operacao_contabil: partsMapeamento[idx_operacao_contabil], 
+        parcelas: partsMapeamento[idx_parcelas], 
+        nsu_tef: partsMapeamento[idx_nsu_tef], 
+        nsu_web: partsMapeamento[idx_nsu_web], 
         nsu_sescnet: nsu_sescnet,
-        tid_sescnet: parts[13],
-        data_transacao: parts[14] 
+        tid_sescnet: partsMapeamento[idx_tid]
     };
 
     return [obj]; 
@@ -429,42 +469,33 @@ document.getElementById("paste-area").addEventListener("paste", function (e) {
     let text = (e.clipboardData || window.clipboardData).getData("text");
     this.value = text;
     
-    let valores = text.split(/\r?\n/)[0].split(/\t/g).map(v => v.trim());
-    while (valores.length > 0 && valores[0] === "") valores.shift();
-
-    let inputs = document.querySelectorAll("#step-2 .col-input");
+    // Processa os dados
     state.dadosSescnetTable = parseSescnetData(text);
 
-    inputs.forEach((input, idx) => {
-        if (state.dadosSescnetTable.length > 0) {
-            // Mapeamento explícito baseado no parseSescnetData para garantir a ordem
-            const obj = state.dadosSescnetTable[0];
-            let value = '';
-            
-            // Índices de 0 a 14 na tela
-            switch(idx) {
-                case 0: value = obj.seq; break;
-                case 1: value = obj.data_sescnet; break;
-                case 2: value = obj.caixa_sescnet; break;
-                case 3: value = obj.valor_sescnet; break;
-                case 4: value = obj.abatimento; break;
-                case 5: value = obj.juros; break;
-                case 6: value = obj.multa; break;
-                case 7: value = obj.total_geral; break;
-                case 8: value = obj.tipo_liquidacao; break;
-                case 9: value = obj.operacao_contabil; break;
-                case 10: value = obj.parcelas; break;
-                case 11: value = obj.nsu_tef; break;
-                case 12: value = obj.nsu_web; break;
-                case 13: value = obj.tid_sescnet; break;
-                case 14: value = obj.data_transacao; break;
-                default: value = '';
+    // Mapeamento dos inputs de visualização (AJUSTADO PARA A NOVA ESTRUTURA)
+    let inputs = document.querySelectorAll("#step-2 .col-input");
+    
+    if (state.dadosSescnetTable.length > 0) {
+        const obj = state.dadosSescnetTable[0];
+        // Array com os valores na ordem exata da tela, incluindo 'outros_pgto'
+        const valuesInOrder = [
+            obj.seq, obj.data_sescnet, obj.caixa_sescnet, obj.valor_sescnet, 
+            obj.abatimento, obj.juros, obj.multa, 
+            obj.outros_pgto, // NOVO CAMPO
+            obj.total_geral, obj.tipo_liquidacao, obj.operacao_contabil, 
+            obj.parcelas, obj.nsu_tef, obj.nsu_web, obj.tid_sescnet 
+        ];
+
+        inputs.forEach((input, idx) => {
+            if (valuesInOrder[idx] !== undefined) {
+                input.value = valuesInOrder[idx];
+            } else {
+                 input.value = '';
             }
-            input.value = value;
-        } else {
-             input.value = '';
-        }
-    });
+        });
+    } else {
+         inputs.forEach(input => input.value = '');
+    }
     
     // Limpa a textarea imediatamente após processar para não exibir o conteúdo colado
     setTimeout(() => { this.value = ''; }, 0); 
@@ -546,10 +577,17 @@ if ($("sitefWebInput")) {
             const mapEntry = sitefWebColumnMap.find(item => item.label.replace(/\./g, '').trim() === labelText.replace(/\./g, '').trim());
 
             if (mapEntry) {
-                const valor = valores[mapEntry.index];
+                let valor = valores[mapEntry.index]; // Usa 'let' para permitir modificação
                 const inputResultEl = labelEl.nextElementSibling;
                 
                 if (inputResultEl && inputResultEl.classList.contains("col-input-sitef-web") && valor !== undefined) {
+                    
+                    // >> ALTERAÇÃO SOLICITADA: TRATAMENTO DA DATA (Limita aos 10 primeiros caracteres) <<
+                    if (mapEntry.id === "data_sitef" && valor.length > 10) {
+                        valor = valor.substring(0, 10);
+                    }
+                    // >> FIM DA ALTERAÇÃO <<
+
                     // Verifica se é valor para formatar (índice 10)
                     if (mapEntry.index === 10) {
                         inputResultEl.value = formatarValorSiTef(valor);
@@ -575,7 +613,8 @@ if ($("btnNext4")) {
     if (dados.length === 0) {
         return showModal("Atenção", "Cole a linha tabulada do SiTef Web (Antigo) na caixa de texto.");
     }
-    if (dados.length < 15) return showModal("Atenção", "Dados do SiTef Web incompletos. Cole a linha tabulada completa (esperado pelo menos 15 colunas).");
+    // Verificação relaxada para permitir menos colunas, mas avisa se faltarem as críticas
+    if (dados.length < 15) showModal("Aviso", "Os dados do SiTef Web parecem incompletos (menos de 15 colunas). Verifique a cópia."); 
 
     const nsuSitefRaw = dados[4] ? dados[4].trim() : '';
     const nsuSescnetRaw = dadosSescnet.nsu_sescnet ? dadosSescnet.nsu_sescnet.trim() : '';
@@ -644,6 +683,12 @@ if ($("sitefExpressInput")) {
                 let v = parts[1].trim();
 
                 if (k && v) {
+                    // >> ALTERAÇÃO SOLICITADA: TRATAMENTO DA DATA (Limita aos 10 primeiros caracteres) <<
+                    if (k === "Data" && v.length > 10) {
+                        v = v.substring(0, 10);
+                    }
+                    // >> FIM DA ALTERAÇÃO <<
+                    
                     map[k] = v;
                 }
             }
@@ -657,11 +702,8 @@ if ($("sitefExpressInput")) {
                 const inputResultEl = labelEl.nextElementSibling;
                 if (inputResultEl && inputResultEl.classList.contains("col-input-sitef")) {
                     
-                    if (inputResultEl.id === "data_sitef_express" && valor.length >= 10) {
-                        inputResultEl.value = valor.substring(0, 10);
-                    } else {
-                        inputResultEl.value = valor;
-                    }
+                    // A LÓGICA ANTIGA FOI REMOVIDA POIS AGORA O CORTE É FEITO NO 'map'
+                    inputResultEl.value = valor;
                 }
             }
         });
@@ -842,19 +884,57 @@ function limparStepAtual() {
     saveState();
 }
 
-/* ---------- ExcelJS Export (Restante da lógica) ---------- */
+/* ------------------------------------------------------------------ */
+/* ---------- NOVA FUNÇÃO: Obter prefixo do email do usuário ---------- */
+/* ------------------------------------------------------------------ */
+function getUserPrefix() {
+    // A chave 'userEmail' deve ter sido salva no localStorage pelo script-login.js
+    const email = localStorage.getItem('userEmail');
+    if (email) {
+        // Extrai a parte antes do '@'
+        const prefixo = email.split('@')[0];
+        // Remove a chave do localStorage após o uso (boa prática)
+        localStorage.removeItem('userEmail'); 
+        return prefixo;
+    }
+    return "usuario_nao_identificado";
+}
+
+
+/**
+ * Converte um ArrayBuffer (como o retornado por fetch) para uma string Base64.
+ * @param {ArrayBuffer} buffer - O buffer de dados binários da imagem.
+ * @param {string} mimeType - O tipo MIME da imagem (ex: 'image/png').
+ * @returns {string} String Base64 formatada com o tipo MIME.
+ */
+function arrayBufferToBase64(buffer, mimeType) {
+    let binary = '';
+    const bytes = new Uint8Array(buffer);
+    const len = bytes.byteLength;
+    for (let i = 0; i < len; i++) {
+        binary += String.fromCharCode(bytes[i]);
+    }
+    // Retorna a string Base64 completa com o prefixo do tipo MIME
+    return `data:${mimeType};base64,${btoa(binary)}`;
+}
+
+
+/* ------------------------------------------------------------------ */
+/* -------------------- ExcelJS Export (Gerar Excel) ------------------ */
+/* ------------------------------------------------------------------ */
 async function gerarExcelPreenchido() {
   const valorCancelarRaw = $("valorCancelar") ? $("valorCancelar").value.trim() : "";
   const valorCancelarNum = parseCurrencyToNumber(valorCancelarRaw);
-
+  
+  // INICIALIZAÇÃO DE VARIÁVEIS DE CAPA PARA GARANTIR QUE NÃO SEJAM UNDEFINED
+  let n_cartao = "";
+  let valorTransacaoFinal = "";
+  
   if (!valorCancelarRaw || valorCancelarNum <= 0) 
     return showModal("Atenção", "Informe um valor a cancelar válido e maior que zero.");
 
   let valorTransacaoNum = 0;
   
-  // Variáveis para preencher a CAPA
-  let n_cartao = "";
-  let valorTransacaoFinal = "";
   
   const dadosSescnet = state.dadosSescnetTable[0];
   
@@ -885,11 +965,12 @@ async function gerarExcelPreenchido() {
      valorTransacaoNum = parseCurrencyToNumber(dadosSescnet.valor_sescnet);
      
      // CAPA
-     n_cartao = dadosSescnet.tid_sescnet || dadosSescnet.nsu_sescnet || "";
+     // Preferência por TID, depois NSU. Se ambos forem vazios, mantém "" (inicializado no topo)
+     n_cartao = dadosSescnet.tid_sescnet || dadosSescnet.nsu_sescnet || ""; 
      valorTransacaoFinal = dadosSescnet.valor_sescnet || "";
   }
   
-  // 3. Validação do valor (MANTIDA)
+  // 3. Validação do valor
   if (valorCancelarNum > valorTransacaoNum) {
       const formatadoCancelar = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(valorCancelarNum);
       const formatadoTransacao = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(valorTransacaoNum);
@@ -900,25 +981,84 @@ async function gerarExcelPreenchido() {
   }
 
   const workbook = new ExcelJS.Workbook();
+  
+  // Variáveis para IDs das Imagens
+  let logoSescnetId, logoSescId, sitefAntigoId, sitefNovoId;
 
   try {
-    showLoading(true, "Carregando template...");
-    // AQUI: Assumimos que 'template.xlsx' está acessível.
-    const resp = await fetch("/excel/template.xlsx"); 
-    if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
-    const buffer = await resp.arrayBuffer();
+    showLoading(true, "Carregando template e imagens...");
+    
+    // --- 1. CARREGAMENTO E CONVERSÃO DAS IMAGENS ---
+    
+    const [templateResp, sescnetResp, sescResp, sitefAntigoResp, sitefNovoResp] = await Promise.all([
+        fetch("/excel/template.xlsx"),
+        fetch("/assets/logo-sesc.png"),
+    ]);
+
+    if (!templateResp.ok) throw new Error(`Erro HTTP ao carregar template: ${templateResp.status}`);
+    if (!sescnetResp.ok) throw new Error(`Erro HTTP ao carregar logoSESCNET.png: ${sescnetResp.status}`);
+    if (!sescResp.ok) throw new Error(`Erro HTTP ao carregar logo-sesc.png: ${sescResp.status}`);
+    if (!sitefAntigoResp.ok) throw new Error(`Erro HTTP ao carregar sitefantigo.jpg: ${sitefAntigoResp.status}`);
+    if (!sitefNovoResp.ok) throw new Error(`Erro HTTP ao carregar sitefnovo.jpg: ${sitefNovoResp.status}`);
+    
+    
+    // Converte os buffers das imagens
+    const [
+        buffer, 
+        sescnetBuffer, 
+        sescBuffer, 
+        sitefAntigoBuffer, 
+        sitefNovoBuffer
+    ] = await Promise.all([
+        templateResp.arrayBuffer(), 
+        sescnetResp.arrayBuffer(), 
+        sescResp.arrayBuffer(), 
+        sitefAntigoResp.arrayBuffer(), 
+        sitefNovoResp.arrayBuffer()
+    ]);
+    
+    // Carrega o template
     await workbook.xlsx.load(buffer);
+    
+    // --- 2. ADICIONAR IMAGENS AO WORKBOOK (Obter IDs) ---
+    logoSescnetId = workbook.addImage({
+      base64: arrayBufferToBase64(sescnetBuffer, "image/png"),
+      extension: 'png',
+    });
+    
+    logoSescId = workbook.addImage({
+      base64: arrayBufferToBase64(sescBuffer, "image/png"),
+      extension: 'png',
+    });
+    
+    sitefAntigoId = workbook.addImage({
+      base64: arrayBufferToBase64(sitefAntigoBuffer, "image/jpeg"),
+      extension: 'jpeg',
+    });
+
+    sitefNovoId = workbook.addImage({
+      base64: arrayBufferToBase64(sitefNovoBuffer, "image/jpeg"),
+      extension: 'jpeg',
+    });
+
   } catch (e) {
     showLoading(false);
-    return showModal("Erro", "Erro carregando template.xlsx<br>" + (e.message || e));
+    return showModal("Erro", "Erro carregando recursos e template.xlsx<br>" + (e.message || e));
   }
 
   try {
     const sheetCapa = workbook.getWorksheet("CAPA");
     const sheetTransacao = workbook.getWorksheet("TRANSACAO");
     
+    // --- 3. INSERÇÃO DAS IMAGENS NA PLANILHA ---
+
+    // /assets/logo-sesc.png em CAPA H9
+    // Ajustado para ocupar uma área (H9 a I10, por exemplo) para ser visível
+    if (logoSescId) sheetCapa.addImage(logoSescId, 'H9:N18'); 
+
+    
     // =======================================================
-    // PREENCHIMENTO DA PLANILHA CAPA (REGRA MANTIDA)
+    // PREENCHIMENTO DA PLANILHA CAPA
     // =======================================================
 
     // Preenche a CAPA
@@ -928,11 +1068,35 @@ async function gerarExcelPreenchido() {
 
     // Converte a data do formato yyyy-mm-dd para objeto Date
     const [year, month, day] = (state.dataSolicitacao || "").split('-').map(Number);
+    
+    // >> TRATAMENTO DA DATA DO SITEF WEB/EXPRESS PARA O EXCEL (E10) <<
+    let dataReferenciaCapa = state.dataSolicitacao || "";
+    
+    if (state.canalVenda === "sitef") {
+        if (state.versao_sitef === "web" && state.dadosSitefWeb.length > 0) {
+            const dataSitefRaw = state.dadosSitefWeb[1] || ""; // Índice 1 é a Data
+            if (dataSitefRaw.length > 10) {
+                dataReferenciaCapa = dataSitefRaw.substring(0, 10);
+            } else {
+                dataReferenciaCapa = dataSitefRaw;
+            }
+        } else if (state.versao_sitef === "express" && Object.keys(state.dadosSitefExpress).length > 0) {
+            const dataExpressRaw = state.dadosSitefExpress["Data"] || "";
+            if (dataExpressRaw.length > 10) {
+                dataReferenciaCapa = dataExpressRaw.substring(0, 10);
+            } else {
+                dataReferenciaCapa = dataExpressRaw;
+            }
+        }
+    }
+    // >> FIM DO TRATAMENTO <<
+    
     if (year && month && day) {
         // ExcelJS espera um objeto Date (Date(ano, mês-1, dia))
         sheetCapa.getCell("E10").value = new Date(year, month - 1, day); 
     } else {
-         sheetCapa.getCell("E10").value = ""; 
+         // Se a data de solicitação não estiver preenchida, usa a data do SiTef (se aplicável)
+         sheetCapa.getCell("E10").value = dataReferenciaCapa; 
     }
     
     sheetCapa.getCell("E11").value = Number(state.caixa || 0);
@@ -951,26 +1115,51 @@ async function gerarExcelPreenchido() {
     sheetCapa.getCell("E22").value = valorTransacaoFinal;
 
     // =======================================================
-    // PREENCHIMENTO DA PLANILHA TRANSACAO (NOVA LÓGICA)
+    // NOVO: Preenchimento Log do usuário
+    // =======================================================
+    
+    const usuario = getUserPrefix(); // Obtém o prefixo do email
+    const now = new Date();
+    
+    // Formata o horário (HH:MM:SS) e a data (DD/MM/AAAA)
+    const horario = now.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+    const dataGerada = now.toLocaleDateString('pt-BR');
+    
+    const logText = `Planilha gerada via site por ${usuario} às ${horario}, dia ${dataGerada}`;
+    // CÉLULA ALTERADA DE E25 PARA I23
+    sheetCapa.getCell("I23").value = logText;
+    
+    // =======================================================
+    // PREENCHIMENTO DA PLANILHA TRANSACAO 
     // =======================================================
 
-    // 1. SESCNET (C3) - CORREÇÃO APLICADA AQUI
+    // 1. SESCNET (C3)
     if (dadosSescnet) {
-        // Gera um array com todos os valores do SescNet
-        const valoresSescnet = Object.values(dadosSescnet);
+        // Gera o array de valores na ordem da planilha (C3, D3, E3, etc.)
+        const valuesInOrder = [
+            dadosSescnet.seq, dadosSescnet.data_sescnet, dadosSescnet.caixa_sescnet, 
+            dadosSescnet.valor_sescnet, dadosSescnet.abatimento, dadosSescnet.juros, 
+            dadosSescnet.multa, 
+            dadosSescnet.outros_pgto, // Índice 7: Outros Pgto
+            dadosSescnet.total_geral, dadosSescnet.tipo_liquidacao, dadosSescnet.operacao_contabil, 
+            dadosSescnet.parcelas, dadosSescnet.nsu_tef, dadosSescnet.nsu_web, dadosSescnet.tid_sescnet
+        ];
         
-        // Cria um objeto para mapear a partir da coluna C (índice 3)
-        // O ExcelJS espera que a chave do objeto seja o índice da coluna.
-        const rowData = { 3: valoresSescnet }; 
+        const row = sheetTransacao.getRow(3);
         
-        // Pega a linha 3 e preenche a partir da coluna C
-        sheetTransacao.getRow(3).values = rowData;
+        // Coluna C é a de índice 3 no ExcelJS
+        let colIndex = 3; 
+        
+        // Preenche C3, D3, E3, F3, ...
+        valuesInOrder.forEach(valor => {
+            row.getCell(colIndex).value = valor;
+            colIndex++;
+        });
     }
     
     // 2. SITEF WEB (C6)
     if (state.canalVenda === "sitef" && state.versao_sitef === "web" && state.dadosSitefWeb.length > 0) {
          // Colar valores brutos do SiTef Web na C6 (colunas se expandem)
-         // O índice 3 é a coluna C.
          sheetTransacao.getRow(6).values = { 3: state.dadosSitefWeb };
          
     } 
