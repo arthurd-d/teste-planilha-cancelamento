@@ -984,8 +984,10 @@ async function gerarExcelPreenchido() {
   } else if (state.canalVenda === "ecommerce" || state.canalVenda === "pos") {
     // Se for E-commerce ou POS, use os dados do SescNet
     if (dadosSescnet) {
-      valorTransacaoNum = parseCurrencyToNumber(dadosSescnet.valor_sescnet); // CAPA - SESCNET (TID/NSU - APENAS PARA CANAIS SESCNET) // Preferência por TID, depois NSU.
-      n_cartao = dadosSescnet.tid_sescnet || dadosSescnet.nsu_sescnet || "";
+      valorTransacaoNum = parseCurrencyToNumber(dadosSescnet.valor_sescnet);
+
+      // CAPA - ECOMMERCE
+      n_cartao = ""; // <--- AQUI ESTÁ A MUDANÇA: FORÇA O CAMPO A SER VAZIO
       valorTransacaoFinal = dadosSescnet.valor_sescnet || "";
     }
   } // 3. Validação do valor
