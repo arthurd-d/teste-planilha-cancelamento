@@ -1,26 +1,39 @@
-<!--POR ENQUANTO ESTÁ INATIVO, ENQUANTO NÃO IMPLEMENTARMOS A PLANILHA DO SENAC-->
+<!--POR ENQUANTO ESTÁ INATIVO ENQUANTO NÃO IMPLEMENTAMOS A PLANILHA DO SENAC-->
 <!DOCTYPE html>
 <html lang="pt-BR">
-<head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Escolha a Casa — Cancelamento</title>
-  <link rel="stylesheet" href="/styles.css" />
-  <link rel="icon" type="image/png" href="assets/Slogo.png" />
-  <meta name="theme-color" content="#0b1720" />
-</head>
-<body>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Escolha a Casa — Cancelamento</title>
+    <link rel="stylesheet" href="/styles.css" />
+    <link rel="icon" type="image/png" href="assets/Slogo.png" />
+    <meta name="theme-color" content="#0b1720" />
+  </head>
+  <body>
+    <main
+      id="main"
+      class="choose-container"
+      role="main"
+      aria-labelledby="page-title"
+    >
+      <h1 id="page-title">Para qual casa será o cancelamento?</h1>
 
-  <main id="main" class="choose-container" role="main" aria-labelledby="page-title">
-    <h1 id="page-title">Para qual casa será o cancelamento?</h1>
+      <div class="choose-buttons" role="navigation" aria-label="Escolha a casa">
+        <a
+          href="sesc.html"
+          class="choose-btn"
+          aria-label="Ir para cancelamento SESC"
+          >SESC</a
+        >
+        <a
+          href="senac.html"
+          class="choose-btn secondary"
+          aria-label="Ir para cancelamento SENAC"
+          >SENAC</a
+        >
+      </div>
+    </main>
 
-    <div class="choose-buttons" role="navigation" aria-label="Escolha a casa">
-      <a href="sesc.html" class="choose-btn" aria-label="Ir para cancelamento SESC">SESC</a>
-      <a href="senac.html" class="choose-btn secondary" aria-label="Ir para cancelamento SENAC">SENAC</a>
-    </div> 
-  </main>
-
-  <footer class="site-footer" role="contentinfo" aria-hidden="true">
-  </footer>
-</body>
+    <footer class="site-footer" role="contentinfo" aria-hidden="true"></footer>
+  </body>
 </html>

@@ -1,7 +1,3 @@
-/* -------------------------
-    Theme: Estilo B (moderno)
-    Colors: branco / #fcb712 (small) / #004b8e (major)
-    ------------------------- */
 
 :root {
   --blue: #004b8e;
@@ -112,17 +108,19 @@ body {
   display: flex;
   flex-direction: column;
 }
-.field span {
+.field span,
+.login-card label {
   font-weight: 600;
   margin-bottom: 6px;
   color: var(--blue);
   font-size: 14px;
 }
 input[type="text"],
-input[type="date"],
-input[type="number"],
-select,
-textarea {
+    input[type="date"],
+    input[type="number"],
+    input[type="email"],
+    select,
+    textarea {
   padding: 12px 14px;
   border-radius: 12px;
   border: 1px solid rgba(0, 75, 142, 0.1);
@@ -264,36 +262,6 @@ input:disabled {
   height: 18px;
 }
 
-/* Mobile */
-@media (max-width: 880px) {
-  .app-header {
-    padding: 14px 18px;
-  }
-  .card-container {
-    padding: 12px;
-    margin: 18px auto;
-  }
-  .brand .title {
-    font-size: 16px;
-  }
-  .grid-2 {
-    grid-template-columns: 1fr;
-    gap: 16px;
-  }
-  .actions {
-    flex-direction: column-reverse;
-    gap: 10px;
-    margin-top: 16px;
-  }
-  .btn {
-    width: 100%;
-    justify-content: center;
-  }
-  .sitef-choices {
-    flex-direction: column;
-  }
-}
-
 input[type="number"] {
   -webkit-appearance: none;
   -moz-appearance: textfield;
@@ -304,10 +272,6 @@ input[type="number"]::-webkit-inner-spin-button {
   -webkit-appearance: none;
   margin: 0;
 }
-
-/* ================================
-   AQUI COMEÇAM AS ADIÇÕES
-   ================================ */
 
 /* Tela inicial (index.html) */
 .choose-container {
@@ -397,49 +361,45 @@ input[type="number"]::-webkit-inner-spin-button {
   font-size: 14px;
 }
 
-
 .sescnet-row.header div {
   font-weight: bold;
   text-align: center;
-  
 }
-.columns{
-  display:flex;
-  flex-direction: column;  
-  gap: 10px; 
-  margin-bottom: 20px
+.columns {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 20px;
 }
-.input-container{
-    display:flex;
-    flex-direction: column;  
-    width: 90%;
-    max-width: 1100px;
-    margin: 20px auto; 
-    padding: 20px;
-    border: 1px solid #ccc;
-    border-radius: 8px;
+.input-container {
+  display: flex;
+  flex-direction: column;
+  width: 90%;
+  max-width: 1100px;
+  margin: 20px auto;
+  padding: 20px;
+  border: 1px solid #ccc;
+  border-radius: 8px;
 }
 
 /* Estilo para layout de duas colunas (SescNet, SiTef Web, SiTef Express) */
 .columns-2-flow {
   display: grid;
-  grid-template-columns: 1fr 1fr; /* 1ª coluna para o nome (span), 2ª para o valor (input) */
-  gap: 10px 20px; /* Gap entre linhas e colunas */
+  grid-template-columns: 1fr 1fr;
+  gap: 10px 20px;
   margin-bottom: 20px;
 }
 
 /* Garante que o span e o input em .columns-2-flow funcionem em pares */
 .columns-2-flow > span {
-  /* No layout de 1fr 1fr, o span ocupa a primeira metade */
-  margin-bottom: 0; /* Remove margem extra do span */
-  align-self: center; /* Alinha verticalmente */
+  margin-bottom: 0;
+  align-self: center;
   font-weight: 600;
   color: var(--blue);
   font-size: 14px;
 }
 
 .columns-2-flow > input {
-  /* O input ocupa a segunda metade */
 }
 
 /* Títulos das Colunas (Step 5 e Step 4) */
@@ -447,8 +407,88 @@ input[type="number"]::-webkit-inner-spin-button {
 #step-4 .columns-sitef-web > span:nth-child(2),
 #step-5 .columns-sitef-express > span:nth-child(1),
 #step-5 .columns-sitef-express > span:nth-child(2) {
-    font-weight: 800;
-    text-transform: uppercase;
-    font-size: 13px;
-    color: #0d47a1; /* Azul um pouco mais escuro para títulos */
+  font-weight: 800;
+  text-transform: uppercase;
+  font-size: 13px;
+  color: #0d47a1;
+}
+
+/* ================================
+        ESTILOS DE LOGIN
+        ================================ */
+body {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  background-color: #f0f4f7;
+  margin: 0;
+}
+.login-card {
+  background-color: white;
+  padding: 30px;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  width: 100%;
+  max-width: 380px;
+  text-align: center;
+}
+.login-card h2 {
+  color: var(--blue);
+  margin-bottom: 20px;
+}
+.login-card .field {
+  margin-bottom: 20px;
+  text-align: left;
+}
+
+/* ================================
+        BLOQUEIO PARA DISPOSITIVOS MÓVEIS
+        ================================ */
+
+/* 1. Estilo padrão: O Blocker está sempre escondido */
+.mobile-blocker {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: var(--blue); /* Cor de fundo principal */
+  color: white;
+  z-index: 10000; /* Garante que fique acima de todo o conteúdo */
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  padding: 20px;
+}
+
+.mobile-blocker .message-content {
+  max-width: 320px;
+  padding: 30px;
+  border-radius: var(--radius);
+  background: #003e78;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+}
+
+.mobile-blocker h2 {
+  color: var(--yellow);
+  margin-bottom: 10px;
+}
+
+/* 2. Media Query para Celulares: Mostra o Blocker e esconde o Body */
+@media (max-width: 768px) {
+  /* Exibe a tela de bloqueio */
+  .mobile-blocker {
+    display: flex; /* Altera para visível em telas pequenas */
+  }
+
+  /* Esconde todo o conteúdo do site que não seja o blocker */
+  body > *:not(.mobile-blocker) {
+    display: none !important;
+  }
+
+  body {
+    overflow: hidden;
+  }
 }
