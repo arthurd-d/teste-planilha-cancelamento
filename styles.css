@@ -25,12 +25,16 @@ body {
 
 /* Header */
 .app-header {
+  position: sticky;
+  top: 0;
+  z-index: 100;
   display: flex;
   justify-content: space-between;
   align-items: center;
   padding: 18px 28px;
   background: linear-gradient(90deg, var(--blue), #063a7a);
   color: white;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 .brand {
   display: flex;
@@ -63,7 +67,7 @@ body {
 .card-container {
   max-width: 860px;
   margin: 28px auto;
-  padding: 0 20px;
+  padding: 0 20px 80px 20px;
   display: grid;
   gap: 18px;
 }
@@ -131,7 +135,7 @@ textarea {
     transform var(--transition-fast), border-color var(--transition-fast);
 }
 textarea {
-  min-height: 80px; /* Redução da altura da textarea */
+  min-height: 80px;
   font-family: monospace;
 }
 input:focus,
@@ -272,7 +276,7 @@ input[type="number"]::-webkit-inner-spin-button {
   margin: 0;
 }
 
-/* Tela inicial (index.html) */
+/* Tela inicial (index.html e escolha.html) */
 .choose-container {
   min-height: 100vh;
   display: flex;
@@ -290,9 +294,12 @@ input[type="number"]::-webkit-inner-spin-button {
   text-decoration: none;
   font-size: 1.1rem;
   transition: 0.2s;
+  text-align: center;
+  min-width: 250px;
 }
 .choose-btn:hover {
   background: #003e78;
+  transform: translateY(-2px);
 }
 .choose-btn.secondary {
   background: #ffaa00;
@@ -300,7 +307,9 @@ input[type="number"]::-webkit-inner-spin-button {
 }
 .choose-buttons {
   display: flex;
+  flex-direction: column;
   gap: 1.2rem;
+  align-items: center;
 }
 
 /* Tela manutenção (senac.html) */
@@ -315,15 +324,15 @@ input[type="number"]::-webkit-inner-spin-button {
   padding: 2rem;
 }
 
-/* Card de tutoriais */
+/* Card de tutoriais - Movido para baixo */
 .tutorial-card {
   margin: 2rem auto;
   padding: 1.5rem;
   border-radius: 12px;
-  background: #ffffff20;
-  backdrop-filter: blur(3px);
-  max-width: 600px;
-  box-shadow: 0 4px 15px #00000020;
+  background: #ffffff;
+  max-width: 860px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+  width: calc(100% - 40px);
 }
 
 /* Modal */
@@ -389,16 +398,12 @@ input[type="number"]::-webkit-inner-spin-button {
   margin-bottom: 20px;
 }
 
-/* Garante que o span e o input em .columns-2-flow funcionem em pares */
 .columns-2-flow > span {
   margin-bottom: 0;
   align-self: center;
   font-weight: 600;
   color: var(--blue);
   font-size: 14px;
-}
-
-.columns-2-flow > input {
 }
 
 /* Títulos das Colunas (Step 5 e Step 4) */
@@ -413,15 +418,15 @@ input[type="number"]::-webkit-inner-spin-button {
 }
 
 /* ================================
-        ESTILOS DE LOGIN
-        ================================ */
-body {
+   ESTILOS DE LOGIN
+   ================================ */
+.login-container {
   display: flex;
   justify-content: center;
   align-items: center;
   min-height: 100vh;
   background-color: #f0f4f7;
-  margin: 0;
+  padding: 20px;
 }
 .login-card {
   background-color: white;
@@ -441,11 +446,20 @@ body {
   text-align: left;
 }
 
-/* ================================
-        BLOQUEIO PARA DISPOSITIVOS MÓVEIS
-        ================================ */
+/* Botão "Limpar Dados" com cor vermelha */
+.btn.btn-clear {
+  background: #dc2626;
+  color: white;
+  box-shadow: 0 6px 16px rgba(220, 38, 38, 0.2);
+}
+.btn.btn-clear:hover {
+  background: #b91c1c;
+  box-shadow: 0 8px 20px rgba(220, 38, 38, 0.3);
+}
 
-/* 1. Estilo padrão: O Blocker está sempre escondido */
+/* ================================
+   BLOQUEIO PARA DISPOSITIVOS MÓVEIS
+   ================================ */
 .mobile-blocker {
   display: none;
   position: fixed;
@@ -453,9 +467,9 @@ body {
   left: 0;
   width: 100%;
   height: 100%;
-  background-color: var(--blue); /* Cor de fundo principal */
+  background-color: var(--blue);
   color: white;
-  z-index: 10000; /* Garante que fique acima de todo o conteúdo */
+  z-index: 10000;
   justify-content: center;
   align-items: center;
   text-align: center;
@@ -475,14 +489,11 @@ body {
   margin-bottom: 10px;
 }
 
-/* 2. Media Query para Celulares: Mostra o Blocker e esconde o Body */
 @media (max-width: 768px) {
-  /* Exibe a tela de bloqueio */
   .mobile-blocker {
-    display: flex; /* Altera para visível em telas pequenas */
+    display: flex;
   }
 
-  /* Esconde todo o conteúdo do site que não seja o blocker */
   body > *:not(.mobile-blocker) {
     display: none !important;
   }

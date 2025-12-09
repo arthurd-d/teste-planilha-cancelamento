@@ -5,7 +5,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const mensagemErro = document.getElementById("mensagemErro");
 
   // MODO DE DESENVOLVIMENTO:
-  const DEV_MODE = false;
+  const DEV_MODE = true;
 
   const resetError = () => {
     mensagemErro.textContent = "";

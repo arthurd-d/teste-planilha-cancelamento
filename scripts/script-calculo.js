@@ -34,6 +34,26 @@ function voltarStep1() {
   mostrarStep(1);
 }
 
+// Função para voltar à página inicial
+function voltarPaginaInicial() {
+  window.location.href = "/escolha.html";
+}
+
+// ============================================
+// FORMATAÇÃO DE MOEDA
+// ============================================
+
+function formatCurrencyInput(el) {
+  let v = el.value.replace(/\D/g, "");
+  if (!v) return (el.value = "");
+  while (v.length < 3) v = "0" + v;
+  const cents = v.slice(-2);
+  let intPart = v.slice(0, -2);
+  intPart = intPart.replace(/^0+/, "") || "0";
+  intPart = intPart.replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+  el.value = `R$ ${intPart},${cents}`;
+}
+
 // ============================================
 // SETUP INICIAL
 // ============================================
@@ -132,12 +152,12 @@ function montarFormularioCalculo() {
       <div class="grid-2">
         <label class="field">
           <span>Valor do plano mensal (R$)</span>
-          <input id="valor_mensal" type="number" step="0.01" min="0" placeholder="Ex: 150.00" />
+          <input id="valor_mensal" type="text" placeholder="R$ 0,00" />
         </label>
 
         <label class="field">
           <span>Valor do plano escolhido (R$) - Valor total</span>
-          <input id="valor_plano" type="number" step="0.01" min="0" placeholder="Ex: 353.00" />
+          <input id="valor_plano" type="text" placeholder="R$ 0,00" />
         </label>
 
         <label class="field">
@@ -172,12 +192,12 @@ function montarFormularioCalculo() {
       <div class="grid-2">
         <label class="field">
           <span>Valor do plano mensal (R$)</span>
-          <input id="valor_mensal" type="number" step="0.01" min="0" placeholder="Ex: 150.00" />
+          <input id="valor_mensal" type="text" placeholder="R$ 0,00" />
         </label>
 
         <label class="field">
           <span>Valor do plano escolhido (R$) - Valor total</span>
-          <input id="valor_plano" type="number" step="0.01" min="0" placeholder="Ex: 353.00" />
+          <input id="valor_plano" type="text" placeholder="R$ 0,00" />
         </label>
 
         <label class="field">
@@ -203,7 +223,7 @@ function montarFormularioCalculo() {
       <div class="grid-2">
         <label class="field">
           <span>Valor do plano mensal (R$)</span>
-          <input id="valor_mensal" type="number" step="0.01" min="0" placeholder="Ex: 150.00" />
+          <input id="valor_mensal" type="text" placeholder="R$ 0,00" />
         </label>
 
         <label class="field">
@@ -221,12 +241,20 @@ function montarFormularioCalculo() {
 
   formCalculo.innerHTML = html;
 
-  // Adiciona listeners para atualizar cálculos em tempo real
+  // Adiciona listeners para formatação de moeda e cálculos
   setTimeout(() => {
     const inputs = formCalculo.querySelectorAll("input, select");
     inputs.forEach((input) => {
-      input.addEventListener("input", calcularResultados);
-      input.addEventListener("change", calcularResultados);
+      // Formatar campos de valor
+      if (input.id === "valor_mensal" || input.id === "valor_plano") {
+        input.addEventListener("input", (e) => {
+          formatCurrencyInput(e.target);
+          calcularResultados();
+        });
+      } else {
+        input.addEventListener("input", calcularResultados);
+        input.addEventListener("change", calcularResultados);
+      }
     });
   }, 100);
 }
@@ -234,6 +262,16 @@ function montarFormularioCalculo() {
 // ============================================
 // CÁLCULO DE RESULTADOS
 // ============================================
+
+function parseCurrencyToNumber(value) {
+  if (!value) return 0;
+  return Number(
+    value
+      .replace(/[^\d,]/g, "")
+      .replace(/\./g, "")
+      .replace(",", ".")
+  );
+}
 
 function calcularResultados() {
   const resultadosBox = $("resultadosCalculo");
@@ -243,8 +281,8 @@ function calcularResultados() {
 
   // NÃO RECORRÊNCIA + NÃO MENSAL
   if (state.modalidade === "nao-recorrencia" && state.plano !== "mensal") {
-    const valor_mensal = parseFloat($("valor_mensal")?.value || 0);
-    const valor_plano = parseFloat($("valor_plano")?.value || 0);
+    const valor_mensal = parseCurrencyToNumber($("valor_mensal")?.value || "0");
+    const valor_plano = parseCurrencyToNumber($("valor_plano")?.value || "0");
     const data_venda = $("data_venda")?.value || "";
     const meses_ut = parseInt($("meses_ut")?.value || 0);
     const data_canc = $("data_canc")?.value || "";
@@ -292,8 +330,8 @@ function calcularResultados() {
   }
   // RECORRÊNCIA
   else if (state.modalidade === "recorrencia") {
-    const valor_mensal = parseFloat($("valor_mensal")?.value || 0);
-    const valor_plano = parseFloat($("valor_plano")?.value || 0);
+    const valor_mensal = parseCurrencyToNumber($("valor_mensal")?.value || "0");
+    const valor_plano = parseCurrencyToNumber($("valor_plano")?.value || "0");
     const data_venda = $("data_venda")?.value || "";
     const meses_ut = parseInt($("meses_ut")?.value || 0);
     const data_canc = $("data_canc")?.value || "";
@@ -322,7 +360,7 @@ function calcularResultados() {
   }
   // NÃO RECORRÊNCIA + MENSAL
   else if (state.modalidade === "nao-recorrencia" && state.plano === "mensal") {
-    const valor_mensal = parseFloat($("valor_mensal")?.value || 0);
+    const valor_mensal = parseCurrencyToNumber($("valor_mensal")?.value || "0");
     const data_venda = $("data_venda")?.value || "";
     const data_canc = $("data_canc")?.value || "";
 
@@ -366,6 +404,11 @@ function calcularMesesDisponibilizados(dataVenda, dataCancelamento) {
     if (dataAtual <= d2) {
       meses++;
     }
+  }
+
+  // Adiciona 1 mês se o dia do cancelamento for maior que o dia da venda
+  if (d2.getDate() > d1.getDate()) {
+    meses++;
   }
 
   return meses;

@@ -7,33 +7,42 @@
     <link rel="stylesheet" href="/styles.css" />
     <link rel="icon" type="image/png" href="/assets/Slogo.png" />
     <meta name="theme-color" content="#0b1720" />
-    </head>
+  </head>
   <body>
     <div class="mobile-blocker" role="alert">
-        <div class="message-content">
-            <h2>Acesso Restrito</h2>
-            <p>Não é possível acessar este site via dispositivos móveis. Por favor, acesse pelo computador para continuar.</p>
-        </div>
-    </div>
-    
-    <div class="login-card">
-      <h2>Acesso à Solicitação</h2>
-      <div class="field">
-        <label for="emailInput">E-mail Corporativo</label>
-        <form id="loginForm">
-        <input
-          id="emailInput"
-          type="email"
-          placeholder="e-mail"
-        />
+      <div class="message-content">
+        <h2>Acesso Restrito</h2>
+        <p>
+          Não é possível acessar este site via dispositivos móveis. Por favor,
+          acesse pelo computador para continuar.
+        </p>
       </div>
-      <button class="btn primary" id="btnLogin" style="width: 100%">
-        Acessar
-      </button>
-      <p id="mensagemErro" style="color: red; margin-top: 15px; display: none;">
-        Acesso não autorizado.
-      </p>
-      </form>
+    </div>
+
+    <div class="login-container">
+      <div class="login-card">
+        <h2>Acesso à Solicitação</h2>
+        <form id="loginForm">
+          <div class="field">
+            <label for="emailInput">E-mail Corporativo</label>
+            <input id="emailInput" type="email" placeholder="e-mail" required />
+          </div>
+          <button
+            class="btn primary"
+            id="btnLogin"
+            type="submit"
+            style="width: 100%"
+          >
+            Acessar
+          </button>
+          <p
+            id="mensagemErro"
+            style="color: red; margin-top: 15px; display: none"
+          >
+            Acesso não autorizado.
+          </p>
+        </form>
+      </div>
     </div>
 
     <script src="scripts/script-login.js"></script>
