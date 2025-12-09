@@ -307,7 +307,8 @@ function calcularResultados() {
       valor_devolucao = valor_plano - servico_disp;
     }
 
-    resultadosContent.innerHTML = `
+    if (valor_devolucao > 0) {
+      resultadosContent.innerHTML = `
       <div><b>Meses disponibilizados:</b> ${meses_disp}</div>
       <div><b>Meses utilizados:</b> ${meses_ut}</div>
       <div><b>Multa por mês:</b> ${formatarMoeda(multa_mes)}</div>
@@ -325,7 +326,26 @@ function calcularResultados() {
         )}
       </div>
     `;
-
+    } else if (valor_devolucao < 0) {
+      resultadosContent.innerHTML = `
+        <div><b>Meses disponibilizados:</b> ${meses_disp}</div>
+        <div><b>Meses utilizados:</b> ${meses_ut}</div>
+        <div><b>Multa por mês:</b> ${formatarMoeda(multa_mes)}</div>
+        <div><b>Valor total da multa:</b> ${formatarMoeda(multa_total)}</div>
+        <div><b>Valor do serviço disponibilizado:</b> ${formatarMoeda(
+          servico_disp
+        )}</div>
+        <div><b>Valor do serviço disponibilizado + multa:</b> ${formatarMoeda(
+          servico_e_multa
+        )}</div>
+        <hr style="margin: 12px 0;">
+        <div style="font-size: 16px; font-weight: 800; color: var(--blue);">
+          <b>Valor a ser pago pelo cliente:</b> ${formatarMoeda(
+            valor_devolucao
+          )}
+        </div>
+      `;
+    }
     resultadosBox.style.display = "block";
   }
   // RECORRÊNCIA
