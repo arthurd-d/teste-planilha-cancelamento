@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Escolha a Opção - SESC</title>
+    <link rel="stylesheet" href="/styles.css" />
+    <link rel="icon" type="image/png" href="/assets/Slogo.png" />
+    <meta name="theme-color" content="#0b1720" />
+  </head>
+  <body>
+    <div class="mobile-blocker" role="alert">
+      <div class="message-content">
+        <h2>Acesso Restrito</h2>
+        <p>
+          Não é possível acessar este site via dispositivos móveis. Por favor,
+          acesse pelo computador para continuar.
+        </p>
+      </div>
+    </div>
+
+    <main
+      id="main"
+      class="choose-container"
+      role="main"
+      aria-labelledby="page-title"
+    >
+      <div class="container-fecomercio">
+        <div class="logo-fecomercio">
+          <img src="/assets/fecomercio.png" alt="Fecomércio, SESC e SENAC" />
+        </div>
+      </div>
+
+      <h1 id="page-title">O que deseja fazer?</h1>
+
+      <div
+        class="choose-buttons"
+        role="navigation"
+        aria-label="Escolha a operação"
+      >
+        <a
+          href="src/sesc.html"
+          class="choose-btn"
+          aria-label="Ir para cancelamento de cartões"
+        >
+          Cancelamento de Cartões
+        </a>
+        <a
+          href="src/calculo.html"
+          class="choose-btn secondary"
+          aria-label="Ir para cálculo de multa academia"
+        >
+          Cálculo da Multa - Academia
+        </a>
+      </div>
+    </main>
+
+    <footer class="site-footer" role="contentinfo" aria-hidden="true"></footer>
+  </body>
+</html>

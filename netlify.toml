@@ -1,2 +1,11 @@
 [build]
   functions = "netlify/functions"
+  publish = "."
+
+[dev]
+  command = "serve . -p 3999"
+  targetPort = 3999
+  port = 8888
+  publish = "."
+  functions = "netlify/functions"
+  autoLaunch = false
