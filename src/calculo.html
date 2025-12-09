@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Cálculo de Multa - Academia SESC</title>
+    <link rel="stylesheet" href="/styles.css" />
+    <link rel="icon" type="image/png" href="/assets/Slogo.png" />
+    <meta name="theme-color" content="#0b1720" />
+  </head>
+  <body>
+    <div class="mobile-blocker" role="alert">
+      <div class="message-content">
+        <h2>Acesso Restrito</h2>
+        <p>
+          Não é possível acessar este site via dispositivos móveis. Por favor,
+          acesse pelo computador para continuar.
+        </p>
+      </div>
+    </div>
+
+    <div class="app">
+      <header class="app-header">
+        <div class="brand">
+          <div class="title">Cálculo de Multa - Academia</div>
+        </div>
+        <div class="steps">
+          <div class="step-indicator" id="stepIndicator">Passo 1 de 2</div>
+        </div>
+      </header>
+
+      <div class="container-fecomercio">
+        <div class="logo-fecomercio">
+          <img src="/assets/fecomercio.png" alt="Fecomércio, SESC e SENAC" />
+        </div>
+      </div>
+
+      <main class="card-container">
+        <!-- STEP 1: Seleção de Modalidade e Plano -->
+        <section class="card step active" id="step-1">
+          <h2>Informações do Plano</h2>
+
+          <div class="grid-2">
+            <label class="field">
+              <span>Modalidade</span>
+              <select id="modalidade">
+                <option value="">Selecione...</option>
+                <option value="recorrencia">Recorrência</option>
+                <option value="nao-recorrencia">Não Recorrência</option>
+              </select>
+            </label>
+
+            <label class="field">
+              <span>Plano</span>
+              <select id="plano" disabled>
+                <option value="">Selecione uma modalidade primeiro</option>
+              </select>
+            </label>
+          </div>
+
+          <div class="actions">
+            <button class="btn ghost btn-clear" onclick="limparDados()">
+              Limpar Dados
+            </button>
+            <button class="btn primary" id="btnNext1">Próximo</button>
+          </div>
+        </section>
+
+        <!-- STEP 2: Cálculos -->
+        <section class="card step" id="step-2">
+          <h2>Dados para Cálculo</h2>
+
+          <div id="formCalculo">
+            <!-- Conteúdo será preenchido dinamicamente pelo JS -->
+          </div>
+
+          <div
+            class="card-summary"
+            id="resultadosCalculo"
+            style="display: none"
+          >
+            <h3 style="margin-top: 0; color: var(--blue); font-size: 18px">
+              Resultados
+            </h3>
+            <div id="resultadosContent"></div>
+          </div>
+
+          <div class="actions">
+            <button class="btn ghost" onclick="voltarStep1()">Voltar</button>
+            <button class="btn ghost btn-clear" onclick="limparCalculos()">
+              Limpar Cálculos
+            </button>
+          </div>
+        </section>
+      </main>
+
+      <footer class="app-footer"></footer>
+    </div>
+
+    <!-- Modal de Mensagens -->
+    <div id="modal" class="modal hidden">
+      <div class="modal-content">
+        <h3 id="modal-title">Título</h3>
+        <div id="modal-message"></div>
+        <div class="modal-actions">
+          <button id="modal-ok" class="btn primary">OK</button>
+        </div>
+      </div>
+    </div>
+
+    <script src="/scripts/script-calculo.js"></script>
+  </body>
+</html>
