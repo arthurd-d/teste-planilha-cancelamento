@@ -1,6 +1,33 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
   <head>
+    <script>
+      (function() {
+        const APP_VERSION = '2024-12-11-001';
+        const storedVersion = localStorage.getItem('sesc_app_version');
+        
+        if (storedVersion !== APP_VERSION) {
+          console.log('🔄 Nova versão detectada! Limpando cache...');
+          localStorage.clear();
+          sessionStorage.clear();
+          
+          if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.getRegistrations().then(registrations => {
+              registrations.forEach(reg => reg.unregister());
+            });
+          }
+          
+          if ('caches' in window) {
+            caches.keys().then(names => {
+              names.forEach(name => caches.delete(name));
+            });
+          }
+          
+          localStorage.setItem('sesc_app_version', APP_VERSION);
+          window.location.reload(true);
+        }
+      })();
+    </script>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width,initial-scale=1" />
     <title>Cálculo de Multa - Academia SESC</title>
