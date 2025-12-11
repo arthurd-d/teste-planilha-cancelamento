@@ -9,8 +9,38 @@
   publish = "."
   functions = "netlify/functions"
   autoLaunch = false
-  
-  [[headers]]
-  for = "/index.html"
+
+# Cache busting para HTML - sempre revalida
+[[headers]]
+  for = "/*.html"
   [headers.values]
-    Cache-Control = "no-cache, no-store, must-revalidate"
+    Cache-Control = "no-cache, no-store, must-revalidate, max-age=0"
+    Pragma = "no-cache"
+    Expires = "0"
+
+# Cache busting para JavaScript
+[[headers]]
+  for = "/scripts/*.js"
+  [headers.values]
+    Cache-Control = "no-cache, no-store, must-revalidate, max-age=0"
+    Pragma = "no-cache"
+    Expires = "0"
+
+# Cache busting para CSS
+[[headers]]
+  for = "/*.css"
+  [headers.values]
+    Cache-Control = "no-cache, no-store, must-revalidate, max-age=0"
+    Pragma = "no-cache"
+    Expires = "0"
+
+# Assets (imagens, excel) podem ter cache mais longo
+[[headers]]
+  for = "/assets/*"
+  [headers.values]
+    Cache-Control = "public, max-age=86400"
+
+[[headers]]
+  for = "/excel/*"
+  [headers.values]
+    Cache-Control = "public, max-age=86400"
