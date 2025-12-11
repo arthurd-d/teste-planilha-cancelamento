@@ -1089,7 +1089,9 @@ async function gerarExcelPreenchido() {
     sheetCapa.getCell("E13").value = state.nomeEstabelecimento;
 
     sheetCapa.getCell("E19").value = state.canalVenda; // Células da CAPA preenchidas com as variáveis
-    sheetCapa.getCell("E20").value = n_cartao;
+    if (n_cartao != "") {
+      sheetCapa.getCell("E20").value = n_cartao;
+    }
     sheetCapa.getCell("E22").value = valorTransacaoFinal; // ======================================================= // NOVO: Preenchimento Log do usuário // =======================================================
 
     const usuario = getUserPrefix(); // Obtém o prefixo do email
